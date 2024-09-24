@@ -63,3 +63,24 @@ export interface IEmployeeItem {
   name: EmployeeFields;
   type: string;
 }
+
+/** User Data Types */
+export type job_title = {
+  name: string;
+};
+
+export interface User {
+  id: string;
+  first_name: string;
+  last_name: string;
+  job_title: job_title;
+  job_title_id: string;
+}
+
+export interface FormValues {
+  id: string;
+  first_name: string;
+  last_name: string;
+  job_title: string;
+  job_title_id: string;
+}

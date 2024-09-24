@@ -1,5 +1,12 @@
 import {useCallback, useEffect, useState} from "react";
-import {fetchData, removeData, sendData, UserData} from "../utilities/services";
+import {
+  fetchData,
+  removeData,
+  sendData,
+  updateData,
+  UserData,
+} from "../utilities/services";
+import {FormValues, User} from "@/utilities/types";
 
 export const usePost = (url: string) => {
   const [status, setStatus] = useState<boolean>(false);
@@ -24,14 +31,8 @@ export const usePost = (url: string) => {
   return {status, loading, error, post};
 };
 
-interface FetchDataResult<T> {
-  data: T | [];
-  loading: boolean;
-  error: string | null;
-}
-
-export const useGet = <T>(url: string): FetchDataResult<T> => {
-  const [data, setData] = useState<T | []>([]);
+export const useGet = (url: string) => {
+  const [data, setData] = useState<User[] | []>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,11 +54,11 @@ export const useGet = <T>(url: string): FetchDataResult<T> => {
   useEffect(() => {
     get();
   }, [get]);
-  return {data, loading, error};
+  return {data, loading, error, get};
 };
 
 export const useDelete = () => {
-  const [status, setStatus] = useState<boolean>(false);
+  const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,4 +78,27 @@ export const useDelete = () => {
     }
   };
   return {status, loading, error, remove};
+};
+
+export const useUpdate = () => {
+  const [status, setStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const update = async (url: string, payload: FormValues) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await updateData(url, payload);
+      setStatus(result.message);
+    } catch (err: unknown) {
+      console.log(err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else setError("An Unknown Error Occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return {status, loading, error, update};
 };

@@ -24,35 +24,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {useDelete, useGet} from "@/hooks/useApiCall";
+import {useDelete, useGet, useUpdate} from "@/hooks/useApiCall";
+import {FormValues, User} from "@/utilities/types";
 import {useEffect, useRef, useState} from "react";
 import {useForm} from "react-hook-form";
 import {FiEdit, FiSave, FiTrash} from "react-icons/fi";
 
-interface job_title {
-  name: string;
-}
-
-interface User {
-  id: string;
-  first_name: string;
-  last_name: string;
-  job_title: job_title;
-}
-
-interface FormValues {
-  first_name: string;
-  last_name: string;
-  job_title: string;
-}
-
 export const AllUsers = () => {
   const [isEditRow, setIsEditRow] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const {data} = useGet<User[]>("/users");
+  const {data} = useGet("/users");
   const {remove} = useDelete();
+  const {update} = useUpdate();
   const tableRef = useRef<HTMLDivElement | null>(null);
-  const {register, handleSubmit} = useForm<FormValues>();
+  const {register, handleSubmit, setValue} = useForm<FormValues>();
 
   useEffect(() => {
     if (data) {
@@ -60,16 +45,35 @@ export const AllUsers = () => {
     }
   }, [data]);
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
+  const onSubmit = async (data: FormValues) => {
+    await update(`/users/${data.id}`, data);
+    const updatedUser: User = {
+      id: data.id,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      job_title: {name: data.job_title},
+      job_title_id: data.job_title_id,
+    };
+    const updatedUsers = users.map(user =>
+      user.id === data.id ? updatedUser : user
+    );
+    setUsers(updatedUsers);
+    setIsEditRow(null);
   };
 
   const handleEdit = (
     event: React.MouseEvent<HTMLButtonElement>,
-    id: string
+    user: User
   ) => {
     event.preventDefault();
-    setIsEditRow(prevId => (prevId === id ? null : id));
+    setIsEditRow(prevId => (prevId === user.id ? null : user.id));
+    if (user.id) {
+      setValue("id", user.id);
+      setValue("first_name", user.first_name);
+      setValue("last_name", user.last_name);
+      setValue("job_title", user.job_title.name);
+      setValue("job_title_id", user.job_title_id);
+    }
   };
 
   const handleRemove = async (id: string) => {
@@ -111,30 +115,21 @@ export const AllUsers = () => {
               <TableRow key={user.id}>
                 <TableCell className="w-36">
                   {isEditRow === user.id ? (
-                    <Input
-                      value={user.first_name}
-                      {...register("first_name")}
-                    ></Input>
+                    <Input {...register("first_name")}></Input>
                   ) : (
                     user.first_name
                   )}
                 </TableCell>
                 <TableCell className="w-36">
                   {isEditRow === user.id ? (
-                    <Input
-                      value={user.last_name}
-                      {...register("last_name")}
-                    ></Input>
+                    <Input {...register("last_name")}></Input>
                   ) : (
                     user.last_name
                   )}
                 </TableCell>
                 <TableCell className="w-36">
                   {isEditRow === user.id ? (
-                    <Input
-                      value={user.job_title.name}
-                      {...register("job_title")}
-                    ></Input>
+                    <Input {...register("job_title")}></Input>
                   ) : (
                     user.job_title.name
                   )}
@@ -163,7 +158,7 @@ export const AllUsers = () => {
                           <button
                             type="button"
                             className="hover:bg-sky-500 hover:text-white rounded-full p-1"
-                            onClick={event => handleEdit(event, user.id)}
+                            onClick={event => handleEdit(event, user)}
                           >
                             <FiEdit />
                           </button>
