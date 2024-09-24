@@ -1,7 +1,6 @@
 import {Router, Request, Response} from "express";
 import {PrismaClient} from "@prisma/client";
-import {v4 as uuidv4} from "uuid";
-import {CreateUserData, DepartmentData, UserData} from "../types";
+import {DepartmentData} from "../types";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -37,12 +36,12 @@ router.post(
 
 router.delete(
   "/departments/:id",
-  async (req: Request<{id: number}>, res: Response) => {
+  async (req: Request<{id: string}>, res: Response) => {
     const id = req.params.id;
     try {
       const department = await prisma.departments.delete({
         where: {
-          id: id,
+          id: parseInt(id),
         },
       });
       if (department) {
@@ -54,18 +53,19 @@ router.delete(
       console.log(error);
       res.status(500).json({error: "An error occurred while Deleting"});
     }
+    console.log(typeof id);
   }
 );
 
 router.put(
   "/departments/:id",
-  async (req: Request<{id: number}, {}, DepartmentData>, res: Response) => {
+  async (req: Request<{id: string}, {}, DepartmentData>, res: Response) => {
     const id = req.params.id;
     const {dept_name} = req.body;
     try {
       const department = await prisma.departments.update({
-        where: {id: id},
-        data: {dept_name},
+        where: {id: parseInt(id)},
+        data: {id: parseInt(id), dept_name},
       });
       res.status(200).send({message: "Updated Data Successfully"});
     } catch (error) {
