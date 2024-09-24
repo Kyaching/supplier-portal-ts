@@ -12,32 +12,42 @@ import {
 } from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
 import {IDepartmentItem} from "@/utilities/types";
+import {usePost} from "@/hooks/useApiCall";
 
 const departmentItems: IDepartmentItem[] = [
-  {title: "Department ID", name: "dept_id", type: "number"},
+  {title: "Department ID", name: "id", type: "number"},
   {title: "Department Name", name: "dept_name", type: "text"},
 ];
 
 const FormSchema = z.object({
-  dept_id: z.string().regex(/^\d+$/, {
-    message: "Dept Id must be a Number",
-  }),
+  id: z
+    .string()
+    .regex(/^\d+$/, {
+      message: "Dept Id must be a Number",
+    })
+    .min(3, {
+      message: "Dept Id must be at least 3 characters long",
+    }),
   dept_name: z.string().min(2, {
     message: "Department Name must be at least 2 characters.",
   }),
 });
 
 export const AddDepartment = () => {
+  const {post} = usePost("/departments");
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      dept_id: "",
+      id: "",
       dept_name: "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const {id, dept_name} = data;
+    await post({id: parseInt(id), dept_name});
+    form.reset();
+    console.log({id: parseInt(id), dept_name});
   }
   return (
     <div className="w-1/3 mx-auto my-2 px-5 pb-2 shadow-md shadow-teal-400 rounded-md">
@@ -48,11 +58,10 @@ export const AddDepartment = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="w-full">
             {departmentItems.map((item, index) => (
-              <div className="mt-2">
+              <div className="mt-2" key={index}>
                 <FormField
                   control={form.control}
                   name={item.name}
-                  key={index}
                   render={({field}) => (
                     <FormItem>
                       <div className="flex gap-2 items-center justify-between">

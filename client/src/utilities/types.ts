@@ -43,7 +43,7 @@ export interface IInputItem {
   type?: string;
 }
 /** Department Types */
-type DepartmentFields = "dept_id" | "dept_name";
+type DepartmentFields = "id" | "dept_name";
 export interface IDepartmentItem {
   title: string;
   name: DepartmentFields;
