@@ -172,18 +172,9 @@ export const AllUsers = () => {
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button className="hover:bg-red-500 hover:text-white rounded-full p-1">
-                              <FiTrash />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-red-500">
-                            <p>Delete</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <button className="hover:bg-red-500 hover:text-white rounded-full p-1">
+                        <FiTrash />
+                      </button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>

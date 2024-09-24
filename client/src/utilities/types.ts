@@ -76,6 +76,10 @@ export interface User {
   job_title: job_title;
   job_title_id: string;
 }
+export interface Department {
+  id: number;
+  dept_name: string;
+}
 
 export interface FormValues {
   id: string;
