@@ -1,5 +1,5 @@
 import axios from "axios";
-import {Department, FormValues, User} from "./types";
+import {Department, FormValues} from "./types";
 const BASE_URL = import.meta.env.VITE_SERVER_URL;
 
 export interface UserData {

@@ -1,19 +1,20 @@
 import {useCallback, useEffect, useState} from "react";
 import {
+  DepartmentData,
   fetchData,
   removeData,
   sendData,
   updateData,
   UserData,
 } from "../utilities/services";
-import {FormValues, User} from "@/utilities/types";
+import {Department, FormValues} from "@/utilities/types";
 
 export const usePost = (url: string) => {
   const [status, setStatus] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const post = async (payload: UserData) => {
+  const post = async (payload: UserData | DepartmentData) => {
     setLoading(true);
     setError(null);
     try {
@@ -31,8 +32,8 @@ export const usePost = (url: string) => {
   return {status, loading, error, post};
 };
 
-export const useGet = (url: string) => {
-  const [data, setData] = useState<User[] | []>([]);
+export const useGet = <T>(url: string) => {
+  const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ export const useGet = (url: string) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchData(url);
+      const result = await fetchData<T>(url);
       setData(result);
     } catch (err: unknown) {
       console.log(err);
@@ -85,7 +86,7 @@ export const useUpdate = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const update = async (url: string, payload: FormValues) => {
+  const update = async (url: string, payload: FormValues | Department) => {
     setLoading(true);
     setError(null);
     try {

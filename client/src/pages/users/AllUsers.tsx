@@ -33,7 +33,7 @@ import {FiEdit, FiSave, FiTrash} from "react-icons/fi";
 export const AllUsers = () => {
   const [isEditRow, setIsEditRow] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const {data} = useGet("/users");
+  const {data} = useGet<User>("/users");
   const {remove} = useDelete();
   const {update} = useUpdate();
   const tableRef = useRef<HTMLDivElement | null>(null);
