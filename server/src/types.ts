@@ -10,6 +10,10 @@ export interface CreateUserData {
   user_type_id: string;
   user_type: string;
 }
+export interface DepartmentData {
+  id: number;
+  dept_name: string;
+}
 
 export interface UserData {
   id: string;
