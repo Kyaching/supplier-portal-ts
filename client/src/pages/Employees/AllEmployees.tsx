@@ -48,22 +48,18 @@ export const AllEmployees = () => {
   }, [data]);
 
   const onSubmit = async (data: Employee) => {
-    await update(`/employees/${data.id}`, data);
-    // const updatedUser: Employee = {
-    //   id: data.id,
-    //   emp_name: data.emp_name,
-    //   first_name: data.first_name,
-    //   last_name: data.last_name,
-    //   email: data.email,
-    //   job_title_id: data.job_title_id,
-    //   dept_id: data.dept_id,
-    //   departments: {dept_name: data.departments.dept_name},
-    //   job_title: {id: data.job_title.id, name: data.job_title.name},
-    // };
-    // const updatedUsers = employees.map(employee =>
-    //   employee.id === data.id ? updatedUser : employee
-    // );
-    // setEmployees(updatedUsers);
+    const {emp_name, first_name, last_name, email, dept_id, job_title_id} =
+      data;
+    const updateEmployee = {
+      emp_name,
+      first_name,
+      last_name,
+      email,
+      job_title_id,
+      dept_id,
+    };
+    await update(`/employees/${data.id}`, updateEmployee);
+
     if (data) {
       const updatedUsers = employees.map(employee =>
         employee.id === data.id ? data : employee
@@ -88,12 +84,48 @@ export const AllEmployees = () => {
       setValue("email", employee.email);
       setValue("job_title_id", employee.job_title_id);
       setValue("dept_id", employee.dept_id);
+      setValue("departments", {dept_name: employee.departments.dept_name});
+      setValue("job_title", {
+        id: employee.job_title.id,
+        name: employee.job_title.name,
+      });
     }
   };
 
   const handleRemove = async (id: string) => {
     await remove(`/employees/${id}`);
     setEmployees(employees.filter(emp => emp.id !== id));
+  };
+
+  const handleJobTitleChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const jobTitleId = event.target.value;
+    setValue("job_title_id", jobTitleId);
+
+    // Find the job title based on the selected id
+    const selectedJobTitle = jobTitles?.find(job => job.id === jobTitleId);
+    if (selectedJobTitle) {
+      setValue("job_title", {
+        id: selectedJobTitle.id,
+        name: selectedJobTitle.name,
+      });
+    }
+  };
+
+  const handleDepartmentChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const deptId = event.target.value;
+    setValue("dept_id", deptId);
+
+    // Find the department based on the selected id
+    const selectedDepartment = departments?.find(
+      dept => String(dept.id) === deptId
+    );
+    if (selectedDepartment) {
+      setValue("departments", {dept_name: selectedDepartment.dept_name});
+    }
   };
 
   const handleInputFocus = (event: FocusEvent) => {
@@ -163,7 +195,10 @@ export const AllEmployees = () => {
                 </TableCell>
                 <TableCell className="w-36">
                   {isEditRow === employee.id ? (
-                    <select {...register("job_title_id", {required: true})}>
+                    <select
+                      {...register("job_title_id", {required: true})}
+                      onChange={handleJobTitleChange}
+                    >
                       {jobTitles?.map(option => (
                         <option key={option.id} value={option.id}>
                           {option.name}
@@ -176,7 +211,10 @@ export const AllEmployees = () => {
                 </TableCell>
                 <TableCell className="w-36">
                   {isEditRow === employee.id ? (
-                    <select {...register("dept_id", {required: true})}>
+                    <select
+                      {...register("dept_id", {required: true})}
+                      onChange={handleDepartmentChange}
+                    >
                       {departments?.map(option => (
                         <option key={option.id} value={option.id}>
                           {option.dept_name}
