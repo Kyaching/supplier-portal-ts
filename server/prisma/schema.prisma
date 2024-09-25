@@ -8,9 +8,10 @@ datasource db {
 }
 
 model job_title {
-  id    String  @id
-  name  String
-  users users[]
+  id        String      @id
+  name      String
+  employees employees[]
+  users     users[]
 }
 
 model user_type {
@@ -34,6 +35,19 @@ model users {
 }
 
 model departments {
-  id        Int    @id
+  id        Int         @id
   dept_name String
+  employees employees[]
+}
+
+model employees {
+  id           String      @id @db.Uuid
+  emp_name     String
+  first_name   String
+  last_name    String
+  email        String
+  job_title_id String
+  dept_id      Int
+  departments  departments @relation(fields: [dept_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "dept_id_fkey")
+  job_title    job_title   @relation(fields: [job_title_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "job_title_fkey")
 }

@@ -4,6 +4,8 @@ import cors from "cors";
 import morgan from "morgan";
 import userRoutes from "./routes/users.route";
 import departmentRoutes from "./routes/departments.route";
+import employeeRoutes from "./routes/employees.route";
+import job_titleRoutes from "./routes/simple.routes";
 
 dotenv.config();
 const app = express();
@@ -15,6 +17,8 @@ app.use(morgan("dev"));
 
 app.use("/api", userRoutes);
 app.use("/api", departmentRoutes);
+app.use("/api", employeeRoutes);
+app.use("/api", job_titleRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello, TypeScript Express!");

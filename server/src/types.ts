@@ -14,6 +14,15 @@ export interface DepartmentData {
   id: number;
   dept_name: string;
 }
+export interface EmployeeData {
+  id: string;
+  emp_name: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  job_title_id: string;
+  dept_id: string;
+}
 
 export interface UserData {
   id: string;
