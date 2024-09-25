@@ -5,6 +5,7 @@ import {
   sendData,
   updateData,
 } from "../utilities/services";
+import toast from "react-hot-toast";
 
 export const usePost = <T>(url: string) => {
   const [status, setStatus] = useState<boolean>(false);
@@ -14,12 +15,17 @@ export const usePost = <T>(url: string) => {
   const post = async (payload: T) => {
     setLoading(true);
     setError(null);
+
     try {
       const result = await sendData(url, payload);
+      if (result.success) {
+        toast.success("Saved Success");
+      }
       setStatus(result.success);
     } catch (err: unknown) {
       console.log(err);
       if (err instanceof Error) {
+        toast.error("Something went wrong. Plese try again!");
         setError(err.message);
       } else setError("An Unknown Error Occurred");
     } finally {
@@ -65,6 +71,9 @@ export const useDelete = () => {
     setError(null);
     try {
       const result = await removeData(url);
+      if (result.message) {
+        toast.success(result.message);
+      }
       setStatus(result.message);
     } catch (err: unknown) {
       console.log(err);

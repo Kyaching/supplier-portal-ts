@@ -8,6 +8,7 @@ import {AddDepartment} from "./pages/Departments/AddDepartment";
 import {AllDepartments} from "./pages/Departments/AllDepartments";
 import {AddEmployee} from "./pages/Employees/AddEmployee";
 import {AllEmployees} from "./pages/Employees/AllEmployees";
+import {Toaster} from "react-hot-toast";
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -25,6 +26,7 @@ function App() {
             <Route path="/addEmp" element={<AddEmployee />} />
             <Route path="/allemps" element={<AllEmployees />} />
           </Routes>
+          <Toaster />
         </div>
       </div>
     </>

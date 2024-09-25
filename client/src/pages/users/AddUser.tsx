@@ -16,6 +16,7 @@ import {Input} from "@/components/ui/input";
 import {IInputItem} from "@/utilities/types";
 import {usePost} from "../../hooks/useApiCall";
 import {UserData} from "@/utilities/services";
+import toast from "react-hot-toast";
 
 const inputItems: IInputItem[] = [
   {id: 1, title: "Username", name: "username", type: "text"},
@@ -83,13 +84,19 @@ export function AddUser() {
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await post(data);
+    // await post(data);
+    toast.promise(post(data), {
+      loading: "Saving...",
+      success: <b>Success</b>,
+      error: <b>Error</b>,
+    });
+
     form.reset();
   }
-
   if (loading) {
     return <div>Loading</div>;
   }
+
   if (error) {
     return <div>Something is Wrong! Please Reload</div>;
   }
