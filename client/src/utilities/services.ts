@@ -1,5 +1,4 @@
 import axios from "axios";
-import {Department, FormValues} from "./types";
 const BASE_URL = import.meta.env.VITE_SERVER_URL;
 
 export interface UserData {
@@ -55,7 +54,7 @@ export const fetchData = async <T>(url: string): Promise<T[]> => {
 };
 
 interface RemoveDataResponse {
-  message: string; // Adjust this based on your API response
+  message: string;
 }
 
 export const removeData = async (url: string): Promise<RemoveDataResponse> => {
@@ -72,9 +71,9 @@ interface UpdateResponse {
   message: string;
 }
 
-export const updateData = async (
+export const updateData = async <T>(
   url: string,
-  payload: FormValues | Department
+  payload: T
 ): Promise<UpdateResponse> => {
   try {
     const response = await axios.put(`${BASE_URL}${url}`, payload);

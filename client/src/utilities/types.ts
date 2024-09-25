@@ -67,6 +67,7 @@ export interface IEmployeeItem {
 
 /** User Data Types */
 export type job_title = {
+  id: string;
   name: string;
 };
 
@@ -78,8 +79,20 @@ export interface User {
   job_title_id: string;
 }
 export interface Department {
-  id: number;
+  id?: number;
   dept_name: string;
+}
+
+export interface Employee {
+  id: string;
+  emp_name: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  job_title: job_title;
+  job_title_id: string;
+  departments: Department;
+  dept_id: string;
 }
 
 export interface FormValues {

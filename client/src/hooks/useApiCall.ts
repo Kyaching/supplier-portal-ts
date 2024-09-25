@@ -5,7 +5,6 @@ import {
   sendData,
   updateData,
 } from "../utilities/services";
-import {Department, FormValues} from "@/utilities/types";
 
 export const usePost = <T>(url: string) => {
   const [status, setStatus] = useState<boolean>(false);
@@ -79,12 +78,12 @@ export const useDelete = () => {
   return {status, loading, error, remove};
 };
 
-export const useUpdate = () => {
+export const useUpdate = <T>() => {
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const update = async (url: string, payload: FormValues | Department) => {
+  const update = async (url: string, payload: T) => {
     setLoading(true);
     setError(null);
     try {

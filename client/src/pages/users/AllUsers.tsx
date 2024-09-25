@@ -51,7 +51,7 @@ export const AllUsers = () => {
       id: data.id,
       first_name: data.first_name,
       last_name: data.last_name,
-      job_title: {name: data.job_title},
+      job_title: {id: data.id, name: data.job_title},
       job_title_id: data.job_title_id,
     };
     const updatedUsers = users.map(user =>

@@ -1,4 +1,16 @@
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {Input} from "@/components/ui/input";
+import {
   Table,
   TableBody,
   TableCell,
@@ -6,58 +18,245 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {useState} from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {useDelete, useGet, useUpdate} from "@/hooks/useApiCall";
+import {Department, Employee, job_title} from "@/utilities/types";
+import {useEffect, useRef, useState} from "react";
+import {useForm} from "react-hook-form";
 import {FiEdit, FiSave, FiTrash} from "react-icons/fi";
 
-const invoices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-];
-
 export const AllEmployees = () => {
-  const [isEditRow, setIsEditRow] = useState(false);
+  const [isEditRow, setIsEditRow] = useState<string | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const {data} = useGet<Employee>("/employees");
+  const {data: jobTitles} = useGet<job_title>("/job_titles");
+  const {data: departments} = useGet<Department>("/departments");
+  const {remove} = useDelete();
+  const {update} = useUpdate();
+  const tableRef = useRef<HTMLDivElement | null>(null);
+  const {register, handleSubmit, setValue} = useForm<Employee>();
 
-  const handleEdit = () => {
-    setIsEditRow(prev => !prev);
+  useEffect(() => {
+    if (data) {
+      setEmployees(data);
+    }
+  }, [data]);
+
+  const onSubmit = async (data: Employee) => {
+    await update(`/employees/${data.id}`, data);
+    // const updatedUser: Employee = {
+    //   id: data.id,
+    //   emp_name: data.emp_name,
+    //   first_name: data.first_name,
+    //   last_name: data.last_name,
+    //   email: data.email,
+    //   job_title_id: data.job_title_id,
+    //   dept_id: data.dept_id,
+    //   departments: {dept_name: data.departments.dept_name},
+    //   job_title: {id: data.job_title.id, name: data.job_title.name},
+    // };
+    // const updatedUsers = employees.map(employee =>
+    //   employee.id === data.id ? updatedUser : employee
+    // );
+    // setEmployees(updatedUsers);
+    if (data) {
+      const updatedUsers = employees.map(employee =>
+        employee.id === data.id ? data : employee
+      );
+      setEmployees(updatedUsers);
+    }
+    console.log(data);
+    setIsEditRow(null);
   };
+
+  const handleEdit = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    employee: Employee
+  ) => {
+    event.preventDefault();
+    setIsEditRow(prevId => (prevId === employee?.id ? null : employee.id));
+    if (employee.id) {
+      setValue("id", employee.id);
+      setValue("emp_name", employee.emp_name);
+      setValue("first_name", employee.first_name);
+      setValue("last_name", employee.last_name);
+      setValue("email", employee.email);
+      setValue("job_title_id", employee.job_title_id);
+      setValue("dept_id", employee.dept_id);
+    }
+  };
+
+  const handleRemove = async (id: string) => {
+    await remove(`/employees/${id}`);
+    setEmployees(employees.filter(emp => emp.id !== id));
+  };
+
+  const handleInputFocus = (event: FocusEvent) => {
+    if (tableRef.current && !tableRef.current.contains(event.target as Node)) {
+      setIsEditRow(null);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleInputFocus);
+    return () => {
+      document.removeEventListener("mousedown", handleInputFocus);
+    };
+  }, []);
+
   return (
-    <div className="w-1/3 mx-auto my-2 px-5 pb-2 shadow-md shadow-teal-400 rounded-md">
-      <h2 className="font-semibold text-xl text-center uppercase my-6">
-        all Employees
+    <div
+      ref={tableRef}
+      className="w-4/5 mx-auto my-2 px-5 pb-2 shadow-md shadow-teal-400 rounded-md"
+    >
+      <h2 className="font-semibold text-xl text-center uppercase">
+        all employees
       </h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>First Name</TableHead>
-            <TableHead>Last Name</TableHead>
-            <TableHead>Job Title</TableHead>
-            <TableHead>Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoices.map(invoice => (
-            <TableRow key={invoice.invoice}>
-              <TableCell>{invoice.invoice}</TableCell>
-              <TableCell>{invoice.paymentStatus}</TableCell>
-              <TableCell>{invoice.paymentMethod}</TableCell>
-              <TableCell>{invoice.totalAmount}</TableCell>
-              <TableCell className="flex gap-2">
-                <button onClick={handleEdit}>
-                  {isEditRow ? <FiSave /> : <FiEdit />}
-                </button>
-                <button>
-                  <FiTrash />
-                </button>
-              </TableCell>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Employee Name</TableHead>
+              <TableHead>First Name</TableHead>
+              <TableHead>Last Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Job Title</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {employees?.map(employee => (
+              <TableRow key={employee.id}>
+                <TableCell className="w-36">
+                  {isEditRow === employee.id ? (
+                    <Input {...register("emp_name")}></Input>
+                  ) : (
+                    employee.emp_name
+                  )}
+                </TableCell>
+                <TableCell className="w-36">
+                  {isEditRow === employee.id ? (
+                    <Input {...register("first_name")}></Input>
+                  ) : (
+                    employee.first_name
+                  )}
+                </TableCell>
+                <TableCell className="w-36">
+                  {isEditRow === employee.id ? (
+                    <Input {...register("last_name")}></Input>
+                  ) : (
+                    employee.last_name
+                  )}
+                </TableCell>
+                <TableCell className="w-36">
+                  {isEditRow === employee.id ? (
+                    <Input {...register("email")}></Input>
+                  ) : (
+                    employee.email
+                  )}
+                </TableCell>
+                <TableCell className="w-36">
+                  {isEditRow === employee.id ? (
+                    <select {...register("job_title_id", {required: true})}>
+                      {jobTitles?.map(option => (
+                        <option key={option.id} value={option.id}>
+                          {option.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    employee.job_title?.name
+                  )}
+                </TableCell>
+                <TableCell className="w-36">
+                  {isEditRow === employee.id ? (
+                    <select {...register("dept_id", {required: true})}>
+                      {departments?.map(option => (
+                        <option key={option.id} value={option.id}>
+                          {option.dept_name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    employee.departments?.dept_name
+                  )}
+                </TableCell>
+                <TableCell className="w-20 text-xl">
+                  {isEditRow === employee.id ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="submit"
+                            className="mr-2 hover:bg-green-500 hover:text-white rounded-full p-1"
+                          >
+                            <FiSave />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-green-500">
+                          <p>save</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="hover:bg-sky-500 hover:text-white rounded-full p-1"
+                            onClick={event => handleEdit(event, employee)}
+                          >
+                            <FiEdit />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-sky-400">
+                          <p>edit</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="hover:bg-red-500 hover:text-white rounded-full p-1">
+                        <FiTrash />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete your account and remove your data from our
+                          servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-400 hover:bg-red-600"
+                          onClick={() => handleRemove(employee.id)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </form>
     </div>
   );
 };

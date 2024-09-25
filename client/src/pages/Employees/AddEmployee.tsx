@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
-import {Department, IEmployeeItem} from "@/utilities/types";
+import {Department, IEmployeeItem, job_title} from "@/utilities/types";
 import {
   Select,
   SelectContent,
@@ -23,11 +23,6 @@ import {
 } from "@/components/ui/select";
 import {useGet, usePost} from "@/hooks/useApiCall";
 import {EmployeeData} from "@/utilities/services";
-
-interface JobTitle {
-  id: string;
-  name: string;
-}
 
 const employeesItems: IEmployeeItem[] = [
   {title: "Employee Name", name: "emp_name", type: "text"},
@@ -73,7 +68,7 @@ const FormSchema = z.object({
 });
 
 export function AddEmployee() {
-  const {data: jobTitles} = useGet<JobTitle>("/job_titles");
+  const {data: jobTitles} = useGet<job_title>("/job_titles");
   const {data: departments} = useGet<Department>("/departments");
   const {post} = usePost<EmployeeData>("/employees");
   const form = useForm<z.infer<typeof FormSchema>>({
