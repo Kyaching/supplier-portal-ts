@@ -5,7 +5,7 @@ import morgan from "morgan";
 import userRoutes from "./routes/users.route";
 import departmentRoutes from "./routes/departments.route";
 import employeeRoutes from "./routes/employees.route";
-import job_titleRoutes from "./routes/simple.routes";
+import job_titleRoutes from "./routes/simple.route";
 
 dotenv.config();
 const app = express();

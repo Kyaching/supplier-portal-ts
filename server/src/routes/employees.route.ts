@@ -8,7 +8,12 @@ const router = Router();
 
 router.get("/employees", async (req: Request, res: Response) => {
   try {
-    const employees = await prisma.employees.findMany();
+    const employees = await prisma.employees.findMany({
+      include: {
+        job_title: true,
+        departments: true,
+      },
+    });
     res.status(200).json(employees);
   } catch (error) {
     console.error(error);
@@ -91,6 +96,7 @@ router.put(
         .status(500)
         .json({error: "An error occurred while creating the user."});
     }
+    console.log(req.body);
   }
 );
 
