@@ -15,6 +15,7 @@ import {
 import {Input} from "@/components/ui/input";
 import {IInputItem} from "@/utilities/types";
 import {usePost} from "../../hooks/useApiCall";
+import {UserData} from "@/utilities/services";
 
 const inputItems: IInputItem[] = [
   {id: 1, title: "Username", name: "username", type: "text"},
@@ -64,7 +65,7 @@ const FormSchema = z.object({
 });
 
 export function AddUser() {
-  const {post, loading, error} = usePost("/users");
+  const {post, loading, error} = usePost<UserData>("/users");
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {

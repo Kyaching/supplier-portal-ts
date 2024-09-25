@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
-import {IEmployeeItem} from "@/utilities/types";
+import {Department, IEmployeeItem} from "@/utilities/types";
 import {
   Select,
   SelectContent,
@@ -21,14 +21,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {useGet, usePost} from "@/hooks/useApiCall";
+import {EmployeeData} from "@/utilities/services";
+
+interface JobTitle {
+  id: string;
+  name: string;
+}
 
 const employeesItems: IEmployeeItem[] = [
   {title: "Employee Name", name: "emp_name", type: "text"},
   {title: "First Name", name: "first_name", type: "text"},
   {title: "Last Name", name: "last_name", type: "text"},
   {title: "Email", name: "email", type: "email"},
-  {title: "Job Title", name: "job_title", type: "text"},
-  {title: "Department", name: "dept_name", type: "select"},
+  {
+    title: "Job Title",
+    name: "job_title_id",
+    type: "select",
+    category: "job_title",
+  },
+  {
+    title: "Department",
+    name: "dept_id",
+    type: "select",
+    category: "department",
+  },
 ];
 
 const FormSchema = z.object({
@@ -46,16 +63,19 @@ const FormSchema = z.object({
     message: "Please enter a valid email address.",
   }),
 
-  job_title: z.string().min(2, {
-    message: "Job Title must be at least 2 characters.",
+  job_title_id: z.string({
+    required_error: "Please select a job title to display",
   }),
 
-  dept_name: z.string().min(2, {
-    message: "User Type must be at least 2 characters.",
+  dept_id: z.string({
+    required_error: "Please select a department to display.",
   }),
 });
 
 export function AddEmployee() {
+  const {data: jobTitles} = useGet<JobTitle>("/job_titles");
+  const {data: departments} = useGet<Department>("/departments");
+  const {post} = usePost<EmployeeData>("/employees");
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -63,12 +83,14 @@ export function AddEmployee() {
       first_name: "",
       last_name: "",
       email: "",
-      job_title: "",
-      dept_name: "",
+      job_title_id: "",
+      dept_id: "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    await post(data);
+    form.reset();
     console.log(data);
   }
 
@@ -81,11 +103,10 @@ export function AddEmployee() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="w-full">
             {employeesItems.map((item, index) => (
-              <div className="mt-2">
+              <div className="mt-2" key={index}>
                 <FormField
                   control={form.control}
                   name={item.name}
-                  key={index}
                   render={({field}) => (
                     <FormItem>
                       <div className="flex gap-2 items-center justify-between">
@@ -98,16 +119,29 @@ export function AddEmployee() {
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select Department" />
+                                  <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="Web Developer">
-                                  Web Developer
-                                </SelectItem>
-                                <SelectItem value="Computer Science">
-                                  Computer Science
-                                </SelectItem>
+                                {item.category === "job_title" &&
+                                  jobTitles?.map(option => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={option.id}
+                                    >
+                                      {option.name}
+                                    </SelectItem>
+                                  ))}
+
+                                {item.category === "department" &&
+                                  departments?.map(option => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={String(option.id)}
+                                    >
+                                      {option.dept_name}
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                           </div>

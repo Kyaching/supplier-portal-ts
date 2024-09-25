@@ -1,20 +1,18 @@
 import {useCallback, useEffect, useState} from "react";
 import {
-  DepartmentData,
   fetchData,
   removeData,
   sendData,
   updateData,
-  UserData,
 } from "../utilities/services";
 import {Department, FormValues} from "@/utilities/types";
 
-export const usePost = (url: string) => {
+export const usePost = <T>(url: string) => {
   const [status, setStatus] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const post = async (payload: UserData | DepartmentData) => {
+  const post = async (payload: T) => {
     setLoading(true);
     setError(null);
     try {

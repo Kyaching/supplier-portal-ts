@@ -18,14 +18,22 @@ export interface DepartmentData {
   id: number;
   dept_name: string;
 }
+export interface EmployeeData {
+  emp_name: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  job_title_id: string;
+  dept_id: string;
+}
 
 interface SendResponse {
   success: boolean;
 }
 
-export const sendData = async (
+export const sendData = async <T>(
   url: string,
-  payload: UserData | DepartmentData
+  payload: T
 ): Promise<SendResponse> => {
   try {
     const response = await axios.post(`${BASE_URL}${url}`, payload);

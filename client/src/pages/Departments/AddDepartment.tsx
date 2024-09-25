@@ -13,6 +13,7 @@ import {
 import {Input} from "@/components/ui/input";
 import {IDepartmentItem} from "@/utilities/types";
 import {usePost} from "@/hooks/useApiCall";
+import {DepartmentData} from "@/utilities/services";
 
 const departmentItems: IDepartmentItem[] = [
   {title: "Department ID", name: "id", type: "number"},
@@ -34,7 +35,7 @@ const FormSchema = z.object({
 });
 
 export const AddDepartment = () => {
-  const {post} = usePost("/departments");
+  const {post} = usePost<DepartmentData>("/departments");
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {

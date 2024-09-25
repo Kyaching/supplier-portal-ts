@@ -53,15 +53,16 @@ export interface IDepartmentItem {
 /** Employees Types */
 type EmployeeFields =
   | "emp_name"
-  | "job_title"
+  | "job_title_id"
   | "first_name"
   | "last_name"
   | "email"
-  | "dept_name";
+  | "dept_id";
 export interface IEmployeeItem {
   title: string;
   name: EmployeeFields;
   type: string;
+  category?: string;
 }
 
 /** User Data Types */
