@@ -9,6 +9,7 @@ import {AllDepartments} from "./pages/Departments/AllDepartments";
 import {AddEmployee} from "./pages/Employees/AddEmployee";
 import {AllEmployees} from "./pages/Employees/AllEmployees";
 import {Toaster} from "react-hot-toast";
+import {MasterDetailsContainer} from "./components/MasterDetailsContainer";
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -25,6 +26,10 @@ function App() {
             <Route path="/alldepts" element={<AllDepartments />} />
             <Route path="/addEmp" element={<AddEmployee />} />
             <Route path="/allemps" element={<AllEmployees />} />
+            <Route
+              path="/master_details"
+              element={<MasterDetailsContainer />}
+            />
           </Routes>
           <Toaster />
         </div>

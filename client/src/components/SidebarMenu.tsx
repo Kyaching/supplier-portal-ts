@@ -6,7 +6,7 @@ import {
   FaUserPlus,
   FaUsers,
 } from "react-icons/fa";
-import {FiUserPlus, FiUsers} from "react-icons/fi";
+import {FiBookOpen, FiUserPlus, FiUsers} from "react-icons/fi";
 import {PiUsersThreeFill} from "react-icons/pi";
 import {RiDragDropFill} from "react-icons/ri";
 import {Menu, MenuItem, Sidebar, SubMenu} from "react-pro-sidebar";
@@ -74,6 +74,12 @@ export const SidebarMenu: (props: SidebarProps) => JSX.Element = ({
               ))}
             </SubMenu>
           ))}
+          <MenuItem
+            component={<Link to="/master_details"></Link>}
+            icon={<FiBookOpen />}
+          >
+            Master Details
+          </MenuItem>
           <MenuItem icon={<RiDragDropFill />}>Widget</MenuItem>
         </Menu>
       </Sidebar>

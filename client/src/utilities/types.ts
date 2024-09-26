@@ -79,7 +79,7 @@ export interface User {
   job_title_id: string;
 }
 export interface Department {
-  id?: number;
+  id: number;
   dept_name: string;
 }
 

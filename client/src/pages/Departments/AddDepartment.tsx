@@ -24,13 +24,13 @@ const FormSchema = z.object({
   id: z
     .string()
     .regex(/^\d+$/, {
-      message: "Dept Id must be a Number",
+      message: "Dept Id must be a number",
     })
     .min(3, {
-      message: "Dept Id must be at least 3 characters long",
+      message: "Id must be at least 3 characters",
     }),
   dept_name: z.string().min(2, {
-    message: "Department Name must be at least 2 characters.",
+    message: "Name must be at least 2 characters.",
   }),
 });
 
