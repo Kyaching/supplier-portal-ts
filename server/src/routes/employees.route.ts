@@ -7,13 +7,24 @@ const prisma = new PrismaClient();
 const router = Router();
 
 router.get("/employees", async (req: Request, res: Response) => {
+  const {dept_id} = req.query as {dept_id: string};
   try {
-    const employees = await prisma.employees.findMany({
-      include: {
-        job_title: true,
-        departments: true,
-      },
-    });
+    const employees = dept_id
+      ? await prisma.employees.findMany({
+          where: {
+            dept_id: parseInt(dept_id),
+          },
+          include: {
+            job_title: true,
+            departments: true,
+          },
+        })
+      : await prisma.employees.findMany({
+          include: {
+            job_title: true,
+            departments: true,
+          },
+        });
     res.status(200).json(employees);
   } catch (error) {
     console.error(error);

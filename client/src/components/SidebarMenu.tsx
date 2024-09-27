@@ -45,7 +45,7 @@ export const SidebarMenu: (props: SidebarProps) => JSX.Element = ({
 }) => {
   return (
     <div style={{display: "flex", height: "100%"}}>
-      <Sidebar collapsed={collapsed}>
+      <Sidebar collapsed={collapsed} transitionDuration={700}>
         <Menu
           closeOnClick
           menuItemStyles={{

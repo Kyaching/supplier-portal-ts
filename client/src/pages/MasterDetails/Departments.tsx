@@ -27,12 +27,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {useDelete, useGet, usePost, useUpdate} from "@/hooks/useApiCall";
+import "../../index.css";
 import {Department} from "@/utilities/types";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useEffect, useRef, useState} from "react";
 import {useForm} from "react-hook-form";
 import {FiEdit, FiSave, FiTrash} from "react-icons/fi";
 import {z} from "zod";
+
+interface Checked {
+  isChecked: number | null;
+  setIsChecked: React.Dispatch<React.SetStateAction<number | null>>;
+}
 
 const FormSchema = z.object({
   id: z
@@ -46,9 +52,10 @@ const FormSchema = z.object({
   dept_name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
   }),
+  checked: z.number().optional(),
 });
 
-export const Departments = () => {
+export const Departments = ({isChecked, setIsChecked}: Checked) => {
   const [isEditRow, setIsEditRow] = useState<number | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const {data} = useGet<Department>("/departments");
@@ -130,6 +137,10 @@ export const Departments = () => {
     };
   }, []);
 
+  const handleCheckboxChange = (id: number) => {
+    setIsChecked(prevId => (prevId === id ? null : id));
+  };
+
   return (
     <div
       ref={tableRef}
@@ -143,7 +154,7 @@ export const Departments = () => {
           all departments
         </h2>
       </div>
-      <div className="overflow-y-auto max-h-60 html">
+      <div className="overflow-y-auto max-h-60 scroll-bar">
         <form onSubmit={handleSubmit(onSubmit)}>
           <Table>
             <TableHeader>
@@ -225,7 +236,10 @@ export const Departments = () => {
               {departments?.map(dept => (
                 <TableRow key={dept.id}>
                   <TableCell className="w-10">
-                    <Checkbox></Checkbox>
+                    <Checkbox
+                      checked={isChecked === dept.id}
+                      onCheckedChange={() => handleCheckboxChange(dept.id)}
+                    ></Checkbox>
                   </TableCell>
                   <TableCell className="w-36">
                     {isEditRow === dept.id ? (

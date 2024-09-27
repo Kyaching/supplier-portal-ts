@@ -84,7 +84,10 @@ export const AllEmployees = () => {
       setValue("email", employee.email);
       setValue("job_title_id", employee.job_title_id);
       setValue("dept_id", employee.dept_id);
-      setValue("departments", {dept_name: employee.departments.dept_name});
+      setValue("departments", {
+        id: employee.departments.id,
+        dept_name: employee.departments.dept_name,
+      });
       setValue("job_title", {
         id: employee.job_title.id,
         name: employee.job_title.name,
@@ -124,7 +127,10 @@ export const AllEmployees = () => {
       dept => String(dept.id) === deptId
     );
     if (selectedDepartment) {
-      setValue("departments", {dept_name: selectedDepartment.dept_name});
+      setValue("departments", {
+        id: selectedDepartment.id,
+        dept_name: selectedDepartment.dept_name,
+      });
     }
   };
 

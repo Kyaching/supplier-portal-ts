@@ -19,7 +19,7 @@ export const Navbar: (props: NavbarProps) => JSX.Element = ({setCollapsed}) => {
     setIsOpen(prev => !prev);
   };
   return (
-    <nav className=" p-3 border-b border-b-[#18B192] shadow-md font-semibold text-lg">
+    <nav className="p-3 border-b border-b-[#18B192] shadow-md font-semibold text-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={handleCollapsed}>

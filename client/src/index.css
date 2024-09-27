@@ -33,3 +33,7 @@ html {
   scrollbar-width: thin; /* Makes the scrollbar thinner */
   scrollbar-color: #18b192 #f1f1f1; /* Color of the thumb and track */
 }
+.scroll-bar {
+  scrollbar-width: thin; /* Makes the scrollbar thinner */
+  scrollbar-color: #18b192 #f1f1f1; /* Color of the thumb and track */
+}
