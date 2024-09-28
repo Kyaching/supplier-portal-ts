@@ -80,7 +80,10 @@ export const SidebarMenu: (props: SidebarProps) => JSX.Element = ({
           >
             Master Details
           </MenuItem>
-          <MenuItem icon={<RiDragDropFill />}>Widget</MenuItem>
+
+          <MenuItem component={<Link to="/widget" />} icon={<RiDragDropFill />}>
+            Widget
+          </MenuItem>
         </Menu>
       </Sidebar>
     </div>

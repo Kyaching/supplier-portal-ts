@@ -12,11 +12,19 @@ router.get("/users", async (req: Request, res: Response) => {
       select: {
         id: true,
         first_name: true,
+        email: true,
+        username: true,
         last_name: true,
         job_title_id: true,
+        user_type_id: true,
         job_title: {
           select: {
             name: true,
+          },
+        },
+        user_type: {
+          select: {
+            type: true,
           },
         },
       },

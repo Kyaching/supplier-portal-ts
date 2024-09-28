@@ -24,7 +24,7 @@ export interface IMenuItem {
 }
 
 /** Users Types */
-type UserFields =
+export type UserFields =
   | "username"
   | "first_name"
   | "middle_name"
@@ -34,7 +34,8 @@ type UserFields =
   | "job_title"
   | "job_title_id"
   | "user_type"
-  | "user_type_id";
+  | "user_type_id"
+  | "tenant_id";
 
 export interface IInputItem {
   id: number;
@@ -69,6 +70,10 @@ export interface IEmployeeItem {
 export type job_title = {
   id: string;
   name: string;
+};
+export type user_Type = {
+  id: string;
+  type: string;
 };
 
 export interface User {
