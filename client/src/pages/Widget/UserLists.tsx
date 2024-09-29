@@ -26,8 +26,10 @@ import {
 } from "@/components/ui/select";
 import {useGet} from "@/hooks/useApiCall";
 import {job_title, user_Type} from "@/utilities/types";
+import {useEffect} from "react";
 import {useForm} from "react-hook-form";
 import {FiMaximize, FiTrash} from "react-icons/fi";
+import {isDirty} from "zod";
 
 type UserInputFieldNames =
   | "first_name"
@@ -55,20 +57,13 @@ export interface UserDetail {
   user_type_id: string; // Adjusted for clarity
   tenant_id: string;
 }
-interface IUserInput {
-  first_name: string;
-  last_name: string;
-  email: string;
-  username: string;
-  job_title_id: string;
-  user_type_id: string;
-  tenant_id: string;
-}
 
 interface UserListProps {
   user: UserDetail;
   index: number;
   handleRemoveUser: (id: string) => void;
+  updateUser: (updatedUser: UserDetail) => void;
+  setWatch: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const userInputs: IUserItem[] = [
@@ -95,10 +90,12 @@ export const UserLists: React.FC<UserListProps> = ({
   user,
   index,
   handleRemoveUser,
+  updateUser,
+  setWatch,
 }) => {
   const {data: userTypes} = useGet<user_Type>("/user_types");
   const {data: jobTitles} = useGet<job_title>("/job_titles");
-  const form = useForm<IUserInput>({
+  const form = useForm({
     defaultValues: {
       first_name: user.first_name,
       last_name: user.last_name,
@@ -109,10 +106,14 @@ export const UserLists: React.FC<UserListProps> = ({
       tenant_id: "1",
     },
   });
+  const {isDirty} = form.formState;
+  useEffect(() => {
+    setWatch(isDirty);
+  }, [isDirty, setWatch]);
 
-  // function onSubmit(formData: IUserInput) {
-  //   console.log(formData);
-  // }
+  const handleChange = (fieldName: keyof UserDetail) => (value: unknown) => {
+    updateUser({...user, [fieldName]: value});
+  };
   return (
     <main className="m-2">
       <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab">
@@ -164,7 +165,10 @@ export const UserLists: React.FC<UserListProps> = ({
                       <FormLabel>{item.title}</FormLabel>
                       {item.type === "select" ? (
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={value => {
+                            field.onChange(value);
+                            handleChange(item.name)(value);
+                          }}
                           value={field.value}
                         >
                           <FormControl>
@@ -200,6 +204,10 @@ export const UserLists: React.FC<UserListProps> = ({
                           <Input
                             className="h-6 bg-white border-white"
                             {...field}
+                            onChange={e => {
+                              field.onChange(e.target.value);
+                              handleChange(item.name)(e.target.value);
+                            }}
                           />
                         </FormControl>
                       )}

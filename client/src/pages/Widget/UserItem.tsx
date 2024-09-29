@@ -45,7 +45,7 @@ interface IUserItem {
   category?: "job_title" | "user_type";
 }
 
-interface IUserInput {
+export interface IUserInput {
   first_name: string;
   last_name: string;
   email: string;
@@ -57,6 +57,7 @@ interface IUserInput {
 
 interface UserListProps {
   handleRemove: () => void;
+  onChange: (data: IUserInput) => void;
 }
 
 const userInputs: IUserItem[] = [
@@ -79,7 +80,7 @@ const userInputs: IUserItem[] = [
   {title: "Tenant Id", name: "tenant_id", type: "text"},
 ];
 
-export const UserItem: React.FC<UserListProps> = ({handleRemove}) => {
+export const UserItem: React.FC<UserListProps> = ({handleRemove, onChange}) => {
   const {data: userTypes} = useGet<user_Type>("/user_types");
   const {data: jobTitles} = useGet<job_title>("/job_titles");
   const form = useForm<IUserInput>({
@@ -94,9 +95,11 @@ export const UserItem: React.FC<UserListProps> = ({handleRemove}) => {
     },
   });
 
-  // function onSubmit(formData: IUserInput) {
-  //   console.log(formData);
-  // }
+  const handleInputChange = () => {
+    const values = form.getValues();
+    onChange(values);
+  };
+
   return (
     <main className="m-2">
       <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab">
@@ -148,16 +151,15 @@ export const UserItem: React.FC<UserListProps> = ({handleRemove}) => {
                       <FormLabel>{item.title}</FormLabel>
                       {item.type === "select" ? (
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={value => {
+                            field.onChange(value);
+                            handleInputChange();
+                          }}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger className="h-6 bg-white border-white">
-                              <SelectValue>
-                                {/* {jobTitles?.find(
-                                  name => name.id === field.value
-                                )?.name || "not find"} */}
-                              </SelectValue>
+                              <SelectValue></SelectValue>
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -184,6 +186,10 @@ export const UserItem: React.FC<UserListProps> = ({handleRemove}) => {
                           <Input
                             className="h-6 bg-white border-white"
                             {...field}
+                            onChange={e => {
+                              field.onChange(e);
+                              handleInputChange();
+                            }}
                           />
                         </FormControl>
                       )}

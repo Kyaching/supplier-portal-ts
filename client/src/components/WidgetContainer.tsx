@@ -1,13 +1,24 @@
-import {useGet} from "@/hooks/useApiCall";
-import {UserItem} from "@/pages/Widget/UserItem";
+import {useGet, usePost} from "@/hooks/useApiCall";
+import {IUserInput, UserItem} from "@/pages/Widget/UserItem";
 import {UserDetail, UserLists} from "@/pages/Widget/UserLists";
 import {useEffect, useState} from "react";
 import {FiPlus, FiSave} from "react-icons/fi";
 
 export const WidgetContainer = () => {
-  const [users, setUsers] = useState<UserDetail[]>([]);
+  const {data, get, loading} = useGet<UserDetail>("/users");
+  const {post} = usePost<IUserInput>("/users");
   const [showInput, setShowInput] = useState(false);
-  const {data} = useGet<UserDetail>("/users");
+  const [users, setUsers] = useState<UserDetail[]>([]);
+  const [watch, setWatch] = useState(false);
+  const [newUser, setNewUser] = useState<IUserInput>({
+    first_name: "",
+    last_name: "",
+    username: "",
+    email: "",
+    job_title_id: "",
+    user_type_id: "",
+    tenant_id: "1",
+  });
 
   useEffect(() => {
     if (data) {
@@ -26,34 +37,56 @@ export const WidgetContainer = () => {
   const handleRemove = () => {
     setShowInput(prev => !prev);
   };
+  const handleSaveUsers = async () => {
+    if (showInput) {
+      await post(newUser);
+      get();
+      setShowInput(false);
+    }
+    console.log("Saving users:", users);
 
-  const handleSubmit = data => {
-    console.log(data);
+    // You can make an API call to save updated user data here
   };
+
+  if (loading) return <div>Loading</div>;
 
   return (
     <main>
-      <section className="flex gap-1 items-center">
-        <button
-          className={showInput ? "cursor-not-allowed opacity-50" : ""}
-          disabled={showInput}
-          onClick={handleAddUser}
-        >
-          <FiPlus />
-        </button>
-        <button type="submit" onClick={handleSubmit}>
-          <FiSave />
-        </button>
-      </section>
-      {showInput && <UserItem handleRemove={handleRemove} />}
-      {users.map((user, index) => (
-        <UserLists
-          key={user.id}
-          user={user}
-          index={index}
-          handleRemoveUser={handleRemoveUser}
-        />
-      ))}
+      <>
+        <section className="flex gap-1 items-center">
+          <button
+            className={showInput ? "cursor-not-allowed opacity-50" : ""}
+            disabled={showInput}
+            onClick={handleAddUser}
+          >
+            <FiPlus />
+          </button>
+          <button
+            className={!watch ? "cursor-not-allowed opacity-50" : ""}
+            disabled={watch}
+            onClick={handleSaveUsers}
+          >
+            <FiSave />
+          </button>
+        </section>
+        {showInput && (
+          <UserItem handleRemove={handleRemove} onChange={setNewUser} />
+        )}
+        {users.map((user, index) => (
+          <UserLists
+            key={user.id}
+            user={user}
+            index={index}
+            handleRemoveUser={handleRemoveUser}
+            setWatch={setWatch}
+            updateUser={(updatedUser: UserDetail) => {
+              setUsers(prev =>
+                prev.map(u => (u.id === updatedUser.id ? updatedUser : u))
+              );
+            }}
+          />
+        ))}
+      </>
     </main>
   );
 };
