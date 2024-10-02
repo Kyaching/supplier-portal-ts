@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import {useGet} from "@/hooks/useApiCall";
 import {job_title, user_Type} from "@/utilities/types";
+import {useEffect} from "react";
 import {useForm} from "react-hook-form";
 import {FiMaximize, FiTrash} from "react-icons/fi";
 
@@ -58,6 +59,7 @@ export interface IUserInput {
 interface UserListProps {
   handleRemove: () => void;
   onChange: (data: IUserInput) => void;
+  setWatch: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const userInputs: IUserItem[] = [
@@ -80,7 +82,11 @@ const userInputs: IUserItem[] = [
   {title: "Tenant Id", name: "tenant_id", type: "text"},
 ];
 
-export const UserItem: React.FC<UserListProps> = ({handleRemove, onChange}) => {
+export const UserItem: React.FC<UserListProps> = ({
+  handleRemove,
+  onChange,
+  setWatch,
+}) => {
   const {data: userTypes} = useGet<user_Type>("/user_types");
   const {data: jobTitles} = useGet<job_title>("/job_titles");
   const form = useForm<IUserInput>({
@@ -94,6 +100,15 @@ export const UserItem: React.FC<UserListProps> = ({handleRemove, onChange}) => {
       tenant_id: "1",
     },
   });
+
+  const {dirtyFields} = form.formState;
+  const totalFields = userInputs.length - 1;
+
+  const allFieldsDirty = Object.keys(dirtyFields).length >= totalFields;
+
+  useEffect(() => {
+    setWatch(allFieldsDirty);
+  }, [allFieldsDirty, setWatch]);
 
   const handleInputChange = () => {
     const values = form.getValues();

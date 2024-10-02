@@ -9,6 +9,7 @@ export interface CreateUserData {
   job_title: string;
   user_type_id: string;
   user_type: string;
+  order: number;
 }
 export interface DepartmentData {
   id: number;
@@ -30,4 +31,13 @@ export interface UserData {
   last_name: string;
   job_title: string;
   job_title_id: string;
+}
+export interface NewUserData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  username: string;
+  email: string;
+  job_title_id: string;
+  user_type_id: string;
 }

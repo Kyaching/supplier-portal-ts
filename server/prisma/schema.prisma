@@ -30,6 +30,7 @@ model users {
   password     String?
   job_title_id String
   user_type_id String
+  order        Int?
   job_title    job_title @relation(fields: [job_title_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_job_title_fkey")
   user_type    user_type @relation(fields: [user_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_user_type_fkey")
 }

@@ -1,7 +1,7 @@
 import {Router, Request, Response} from "express";
 import {PrismaClient} from "@prisma/client";
 import {v4 as uuidv4} from "uuid";
-import {CreateUserData, UserData} from "../types";
+import {CreateUserData, NewUserData, UserData} from "../types";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -17,6 +17,7 @@ router.get("/users", async (req: Request, res: Response) => {
         last_name: true,
         job_title_id: true,
         user_type_id: true,
+
         job_title: {
           select: {
             name: true,
@@ -109,6 +110,45 @@ router.delete("/users/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.put("/users", async (req: Request<{}, NewUserData[]>, res: Response) => {
+  const users = req.body;
+  try {
+    if (Array.isArray(users)) {
+      const updatePromise = users.map(async user => {
+        const {
+          id,
+          username,
+          first_name,
+          last_name,
+          email,
+          user_type_id,
+          job_title_id,
+        } = user;
+
+        return await prisma.users.update({
+          where: {
+            id: id,
+          },
+          data: {
+            first_name,
+            last_name,
+            username,
+            email,
+            user_type_id: user_type_id,
+            job_title_id: job_title_id,
+          },
+        });
+      });
+      const updatedUsers = await Promise.all(updatePromise);
+      res.status(200).send({message: "Updated Data Successfully"});
+    }
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({error: "An error occurred while Updating the users."});
+  }
+});
 router.put(
   "/users/:id",
   async (req: Request<{id: string}, {}, UserData>, res: Response) => {

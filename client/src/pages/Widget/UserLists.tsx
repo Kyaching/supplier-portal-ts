@@ -29,7 +29,7 @@ import {job_title, user_Type} from "@/utilities/types";
 import {useEffect} from "react";
 import {useForm} from "react-hook-form";
 import {FiMaximize, FiTrash} from "react-icons/fi";
-import {isDirty} from "zod";
+import {useSortable} from "@dnd-kit/sortable";
 
 type UserInputFieldNames =
   | "first_name"
@@ -64,6 +64,8 @@ interface UserListProps {
   handleRemoveUser: (id: string) => void;
   updateUser: (updatedUser: UserDetail) => void;
   setWatch: React.Dispatch<React.SetStateAction<boolean>>;
+  maximize: boolean;
+  handleMaximizeUser: (id: string) => void;
 }
 
 const userInputs: IUserItem[] = [
@@ -92,10 +94,15 @@ export const UserLists: React.FC<UserListProps> = ({
   handleRemoveUser,
   updateUser,
   setWatch,
+  maximize,
+  handleMaximizeUser,
 }) => {
   const {data: userTypes} = useGet<user_Type>("/user_types");
   const {data: jobTitles} = useGet<job_title>("/job_titles");
-  const form = useForm({
+  const {attributes, listeners, setNodeRef, transition, transform, isDragging} =
+    useSortable({id: user.id});
+
+  const form = useForm<UserDetail>({
     defaultValues: {
       first_name: user.first_name,
       last_name: user.last_name,
@@ -114,12 +121,29 @@ export const UserLists: React.FC<UserListProps> = ({
   const handleChange = (fieldName: keyof UserDetail) => (value: unknown) => {
     updateUser({...user, [fieldName]: value});
   };
+
+  const handleToggleMaximize = (id: string) => {
+    handleMaximizeUser(id);
+  };
+
+  const style = {
+    transform: `translate3d(${transform?.x ?? 0}px, ${transform?.y ?? 0}px,0)`,
+    transition,
+    opacity: isDragging ? "0.6" : undefined,
+  };
+
   return (
-    <main className="m-2">
+    <main
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="m-2"
+    >
       <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab">
         <span>{index}</span>
         <div className="flex items-center gap-1">
-          <button>
+          <button onClick={() => handleToggleMaximize(user.id)}>
             <FiMaximize />
           </button>
           <AlertDialog>
@@ -152,12 +176,34 @@ export const UserLists: React.FC<UserListProps> = ({
       <Form {...form}>
         <form className="space-y-6">
           <div className="grid grid-cols-4 gap-2 bg-[#8bf1dd] p-2 rounded-b-sm">
-            {userInputs.map(item => (
+            {userInputs.slice(0, 3).map(item => (
               <div
                 key={item.name}
                 className={item.name === "email" ? "col-span-2" : ""}
               >
                 <FormField
+                  control={form.control}
+                  name={item.name}
+                  render={({field}) => (
+                    <FormItem>
+                      <FormLabel>{item.title}</FormLabel>
+                      <Input
+                        className="h-6 bg-white border-white"
+                        {...field}
+                        onChange={e => {
+                          field.onChange(e.target.value);
+                          handleChange(item.name)(e.target.value);
+                        }}
+                      />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ))}
+            {maximize &&
+              userInputs.slice(3).map(item => (
+                <FormField
+                  key={item.name}
                   control={form.control}
                   name={item.name}
                   render={({field}) => (
@@ -173,11 +219,7 @@ export const UserLists: React.FC<UserListProps> = ({
                         >
                           <FormControl>
                             <SelectTrigger className="h-6 bg-white border-white">
-                              <SelectValue>
-                                {/* {jobTitles?.find(
-                                  name => name.id === field.value
-                                )?.name || "not find"} */}
-                              </SelectValue>
+                              <SelectValue></SelectValue>
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -214,8 +256,7 @@ export const UserLists: React.FC<UserListProps> = ({
                     </FormItem>
                   )}
                 />
-              </div>
-            ))}
+              ))}
           </div>
         </form>
       </Form>

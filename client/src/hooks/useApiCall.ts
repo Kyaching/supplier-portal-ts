@@ -98,10 +98,12 @@ export const useUpdate = <T>() => {
     try {
       const result = await updateData(url, payload);
       setStatus(result.message);
+      toast.success(result.message);
     } catch (err: unknown) {
       console.log(err);
       if (err instanceof Error) {
         setError(err.message);
+        toast.error(err.message);
       } else setError("An Unknown Error Occurred");
     } finally {
       setLoading(false);
