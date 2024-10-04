@@ -1,5 +1,4 @@
-import {useGet, usePost, useUpdate} from "@/hooks/useApiCall";
-import {IUserInput, UserItem} from "@/pages/Widget/UserItem";
+import {useDelete, useGet, useUpdate} from "@/hooks/useApiCall";
 import {UserDetail, UserLists} from "@/pages/Widget/UserLists";
 import {
   DndContext,
@@ -18,6 +17,7 @@ import {
   restrictToWindowEdges,
 } from "@dnd-kit/modifiers";
 import {EmptyItem} from "@/pages/Widget/EmptyItem";
+import toast from "react-hot-toast";
 
 export type maxmimizeUser = {
   [id: string]: boolean;
@@ -26,10 +26,12 @@ export type maxmimizeUser = {
 export const WidgetContainer = () => {
   const storedState = localStorage.getItem("maxsize");
   const currentState = storedState ? JSON.parse(storedState) : {};
-  const {data, get, loading} = useGet<UserDetail>("/users");
-  const {post} = usePost<IUserInput>("/users");
+  const {data, loading, get} = useGet<UserDetail>("/users");
+
   const {update} = useUpdate<UserDetail | UserDetail[]>();
+  const {remove} = useDelete();
   const [showInput, setShowInput] = useState<boolean>(false);
+  const [isAllFilled, setIsAllFilled] = useState<boolean>(false);
   const [users, setUsers] = useState<UserDetail[]>([]);
   const [watch, setWatch] = useState<boolean>(false);
   const [maximizeId, setMaximizeId] = useState<maxmimizeUser>(currentState);
@@ -40,35 +42,16 @@ export const WidgetContainer = () => {
       accepts: "empty",
     },
   });
-  const [newUser, setNewUser] = useState<IUserInput>({
-    first_name: "",
-    last_name: "",
-    username: "",
-    email: "",
-    job_title_id: "",
-    user_type_id: "",
-    tenant_id: "1",
-  });
 
   useEffect(() => {
-    const storedOrder = localStorage.getItem("userOrder");
-    const storedUsers = storedOrder ? JSON.parse(storedOrder) : [];
-
     if (data) {
-      const orderedUsers =
-        storedUsers.length > 0
-          ? storedUsers
-              .map((id: string) => data.find(user => user.id === id))
-              .filter(Boolean)
-          : data;
-      setUsers(orderedUsers);
+      setUsers(data);
     }
   }, [data]);
 
   const handleMaximizeUser = (id: string) => {
     const storedState = localStorage.getItem("maxsize");
     const currentState = storedState ? JSON.parse(storedState) : {};
-
     const newState = {
       ...currentState,
       [id]: !currentState[id],
@@ -80,30 +63,45 @@ export const WidgetContainer = () => {
     localStorage.setItem("maxsize", JSON.stringify(newState));
   };
 
-  const handleRemoveUser = (id: string) => {
+  const handleRemoveUser = async (id: string) => {
+    if (id === "2") {
+      setShowInput(false);
+      return setUsers(users.filter(user => user.id !== id));
+    }
+    await remove(`/users/${id}`);
     setUsers(users.filter(user => user.id !== id));
+    setShowInput(false);
   };
 
   const handleAddUser = () => {
+    const newU = {
+      id: "2",
+      first_name: "",
+      last_name: "",
+      username: "",
+      email: "",
+      job_title_id: "",
+      user_type_id: "",
+      tenant_id: "1",
+    };
+    setUsers(prev => [newU, ...prev]);
     setShowInput(prev => !prev);
   };
 
-  const handleRemove = () => {
-    setShowInput(prev => !prev);
-    setWatch(false);
-  };
   const handleSaveUsers = async () => {
-    if (showInput) {
-      await post(newUser);
-      get();
-      setShowInput(false);
-    } else {
-      await update("/users", users);
+    const newUser = users.find(user => user.id === "2");
+    if (newUser && !isAllFilled) {
+      toast.error("Please fill out all field");
+      return;
     }
+    await update("/users", users);
+    await get();
+
     console.log("Saving users:", users);
 
     // You can make an API call to save updated user data here
     setWatch(false);
+    setShowInput(false);
   };
 
   const pointer = useSensor(PointerSensor, {
@@ -125,7 +123,18 @@ export const WidgetContainer = () => {
     const {active, over} = event;
 
     if (over && active?.data?.current?.type === "empty") {
-      setShowInput(true);
+      const newUser = {
+        id: "2",
+        first_name: "",
+        last_name: "",
+        username: "",
+        email: "",
+        job_title_id: "",
+        user_type_id: "",
+        tenant_id: "1",
+      };
+      setUsers(prev => [newUser, ...prev]);
+      setShowInput(prev => !prev);
     }
 
     if (dragItem && active.id !== over?.id) {
@@ -133,15 +142,17 @@ export const WidgetContainer = () => {
         const oldIndex = users.findIndex(user => user.id === active.id);
         const newIndex = users.findIndex(user => user.id === over?.id);
         const newUsers = arrayMove(users, oldIndex, newIndex);
-        localStorage.setItem(
-          "userOrder",
-          JSON.stringify(newUsers.map(user => user.id))
-        );
-        return newUsers;
+
+        const updatedUsers = newUsers.map((item, index) => ({
+          ...item,
+          order: index,
+        }));
+
+        return updatedUsers;
       });
+      setWatch(true);
     }
   };
-
   if (loading) return <div>Loading</div>;
 
   return (
@@ -172,13 +183,7 @@ export const WidgetContainer = () => {
               <FiSave />
             </button>
           </section>
-          {showInput && (
-            <UserItem
-              handleRemove={handleRemove}
-              onChange={setNewUser}
-              setWatch={setWatch}
-            />
-          )}
+
           <SortableContext items={users}>
             {users.map((user, index) => (
               <UserLists
@@ -187,6 +192,7 @@ export const WidgetContainer = () => {
                 index={index}
                 handleRemoveUser={handleRemoveUser}
                 setWatch={setWatch}
+                setIsAllFilled={setIsAllFilled}
                 maximize={maximizeId[user.id] || false}
                 handleMaximizeUser={handleMaximizeUser}
                 updateUser={(updatedUser: UserDetail) => {

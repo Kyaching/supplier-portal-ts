@@ -22,7 +22,7 @@ model user_type {
 
 model users {
   id           String    @id @db.Uuid
-  username     String
+  username     String    @unique
   first_name   String
   middle_name  String?
   last_name    String

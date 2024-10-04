@@ -17,7 +17,7 @@ router.get("/users", async (req: Request, res: Response) => {
         last_name: true,
         job_title_id: true,
         user_type_id: true,
-
+        order: true,
         job_title: {
           select: {
             name: true,
@@ -28,6 +28,9 @@ router.get("/users", async (req: Request, res: Response) => {
             type: true,
           },
         },
+      },
+      orderBy: {
+        order: "asc",
       },
     });
     res.status(200).json(users);
@@ -123,21 +126,38 @@ router.put("/users", async (req: Request<{}, NewUserData[]>, res: Response) => {
           email,
           user_type_id,
           job_title_id,
+          order,
         } = user;
 
-        return await prisma.users.update({
-          where: {
-            id: id,
-          },
-          data: {
-            first_name,
-            last_name,
-            username,
-            email,
-            user_type_id: user_type_id,
-            job_title_id: job_title_id,
-          },
-        });
+        if (id && typeof id === "string" && id.length === 36) {
+          return await prisma.users.update({
+            where: {
+              id: id,
+            },
+            data: {
+              first_name,
+              last_name,
+              username,
+              email,
+              user_type_id: user_type_id,
+              job_title_id: job_title_id,
+              order,
+            },
+          });
+        } else {
+          return await prisma.users.create({
+            data: {
+              id: uuidv4(),
+              username,
+              first_name,
+              last_name,
+              email,
+              user_type_id,
+              job_title_id,
+              order,
+            },
+          });
+        }
       });
       const updatedUsers = await Promise.all(updatePromise);
       res.status(200).send({message: "Updated Data Successfully"});

@@ -214,7 +214,7 @@ export const Employees = ({isChecked}: Filter) => {
   return (
     <div
       ref={tableRef}
-      className="w-4/5 mx-auto mt-10 px-5 pb-2 shadow-md shadow-teal-400 rounded-md"
+      className="w-4/5 mx-auto my-10 px-5 pb-2 shadow-md shadow-teal-400 rounded-md"
     >
       <div className=" p-4 flex items-center justify-between border-b-2 border-b-[#18B192]">
         <Button onClick={() => setShowInput(prev => !prev)}>

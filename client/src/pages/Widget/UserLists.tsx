@@ -56,6 +56,7 @@ export interface UserDetail {
   job_title_id: string; // Adjusted for clarity
   user_type_id: string; // Adjusted for clarity
   tenant_id: string;
+  order?: number;
 }
 
 interface UserListProps {
@@ -64,6 +65,7 @@ interface UserListProps {
   handleRemoveUser: (id: string) => void;
   updateUser: (updatedUser: UserDetail) => void;
   setWatch: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsAllFilled: React.Dispatch<React.SetStateAction<boolean>>;
   maximize: boolean;
   handleMaximizeUser: (id: string) => void;
 }
@@ -94,6 +96,7 @@ export const UserLists: React.FC<UserListProps> = ({
   handleRemoveUser,
   updateUser,
   setWatch,
+  setIsAllFilled,
   maximize,
   handleMaximizeUser,
 }) => {
@@ -114,9 +117,14 @@ export const UserLists: React.FC<UserListProps> = ({
     },
   });
   const {isDirty} = form.formState;
+  const {dirtyFields} = form.formState;
+  const totalFields = userInputs.length - 1;
+
+  const allFieldsDirty = Object.keys(dirtyFields).length >= totalFields;
   useEffect(() => {
+    setIsAllFilled(allFieldsDirty);
     setWatch(isDirty);
-  }, [isDirty, setWatch]);
+  }, [isDirty, setWatch, allFieldsDirty, setIsAllFilled]);
 
   const handleChange = (fieldName: keyof UserDetail) => (value: unknown) => {
     updateUser({...user, [fieldName]: value});

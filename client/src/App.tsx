@@ -11,31 +11,38 @@ import {AllEmployees} from "./pages/Employees/AllEmployees";
 import {Toaster} from "react-hot-toast";
 import {MasterDetailsContainer} from "./components/MasterDetailsContainer";
 import {WidgetContainer} from "./components/WidgetContainer";
+import {Login} from "./pages/Login/Login";
+import {useAuthContext} from "./hooks/useAuth";
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
+  const {isLogged} = useAuthContext();
   return (
     <>
-      <Navbar setCollapsed={setCollapsed} />
-      <div className="flex">
-        <SidebarMenu collapsed={collapsed} />
-        <div className="flex-grow">
-          <Routes>
-            <Route path="/adduser" element={<AddUser />} />
-            <Route path="/allusers" element={<AllUsers />} />
-            <Route path="/adddept" element={<AddDepartment />} />
-            <Route path="/alldepts" element={<AllDepartments />} />
-            <Route path="/addEmp" element={<AddEmployee />} />
-            <Route path="/allemps" element={<AllEmployees />} />
-            <Route
-              path="/master_details"
-              element={<MasterDetailsContainer />}
-            />
-            <Route path="/widget" element={<WidgetContainer />} />
-          </Routes>
-          <Toaster />
+      <>
+        <Navbar setCollapsed={setCollapsed} />
+        <div className="flex">
+          <SidebarMenu collapsed={collapsed} />
+          <div className="flex-grow">
+            <Routes>
+              <Route path="/adduser" element={<AddUser />} />
+              <Route path="/allusers" element={<AllUsers />} />
+              <Route path="/adddept" element={<AddDepartment />} />
+              <Route path="/alldepts" element={<AllDepartments />} />
+              <Route path="/addEmp" element={<AddEmployee />} />
+              <Route path="/allemps" element={<AllEmployees />} />
+              <Route
+                path="/master_details"
+                element={<MasterDetailsContainer />}
+              />
+              <Route path="/widget" element={<WidgetContainer />} />
+            </Routes>
+            <Toaster />
+          </div>
         </div>
-      </div>
+      </>
+
+      {/* <Login /> */}
     </>
   );
 }

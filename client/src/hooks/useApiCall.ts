@@ -19,9 +19,8 @@ export const usePost = <T>(url: string) => {
     try {
       const result = await sendData(url, payload);
       if (result.success) {
-        toast.success("Saved Success");
+        setStatus(result.success);
       }
-      setStatus(result.success);
     } catch (err: unknown) {
       console.log(err);
       if (err instanceof Error) {
