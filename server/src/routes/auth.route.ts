@@ -18,7 +18,7 @@ router.post("/login", async (req: Request, res: Response) => {
       where: {username, password},
     });
     if (!user || user.password !== password) {
-      return res.status(200).send({success: true});
+      return res.status(404).send({success: false});
     }
     const token = jwt.sign(
       {id: user?.id, username: user?.username},
@@ -40,7 +40,7 @@ router.get("/profile", authMiddleware, async (req: AuthUser, res) => {
     },
   });
   if (!user) return res.status(404).json({message: "User not found"});
-  res.json(user);
+  res.json(user.username);
 });
 
 export default router;

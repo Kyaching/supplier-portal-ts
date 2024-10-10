@@ -103,7 +103,12 @@ export const UserLists: React.FC<UserListProps> = ({
   const {data: userTypes} = useGet<user_Type>("/user_types");
   const {data: jobTitles} = useGet<job_title>("/job_titles");
   const {attributes, listeners, setNodeRef, transition, transform, isDragging} =
-    useSortable({id: user.id});
+    useSortable({
+      id: user.id,
+      data: {
+        type: "user",
+      },
+    });
 
   const form = useForm<UserDetail>({
     defaultValues: {

@@ -35,7 +35,9 @@ export const sendData = async <T>(
   payload: T
 ): Promise<SendResponse> => {
   try {
-    const response = await axios.post(`${BASE_URL}${url}`, payload);
+    const response = await axios.post(`${BASE_URL}${url}`, payload, {
+      withCredentials: true,
+    });
     return response.data as SendResponse;
   } catch (error) {
     console.error("Error Posting Data", error);
@@ -45,7 +47,9 @@ export const sendData = async <T>(
 
 export const fetchData = async <T>(url: string): Promise<T[]> => {
   try {
-    const response = await axios.get(`${BASE_URL}${url}`);
+    const response = await axios.get(`${BASE_URL}${url}`, {
+      withCredentials: true,
+    });
     return response.data as T[];
   } catch (error) {
     console.error("Error fetching Data", error);

@@ -4,7 +4,6 @@ import {
   DndContext,
   DragStartEvent,
   PointerSensor,
-  useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -36,12 +35,6 @@ export const WidgetContainer = () => {
   const [watch, setWatch] = useState<boolean>(false);
   const [maximizeId, setMaximizeId] = useState<maxmimizeUser>(currentState);
   const [dragItem, setDragItem] = useState(false);
-  const {setNodeRef} = useDroppable({
-    id: "1",
-    data: {
-      accepts: "empty",
-    },
-  });
 
   useEffect(() => {
     if (data) {
@@ -74,8 +67,9 @@ export const WidgetContainer = () => {
   };
 
   const handleAddUser = () => {
+    const tempId = "2";
     const newU = {
-      id: "2",
+      id: tempId,
       first_name: "",
       last_name: "",
       username: "",
@@ -85,6 +79,14 @@ export const WidgetContainer = () => {
       tenant_id: "1",
     };
     setUsers(prev => [newU, ...prev]);
+    setMaximizeId(prev => {
+      const updatedMaximizeId = {
+        ...prev,
+        [tempId]: false, // Initialize the maximize state for the new user
+      };
+      localStorage.setItem("maxsize", JSON.stringify(updatedMaximizeId)); // Save to localStorage
+      return updatedMaximizeId;
+    });
     setShowInput(prev => !prev);
   };
 
@@ -121,20 +123,36 @@ export const WidgetContainer = () => {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const {active, over} = event;
+    if (over) {
+      if (active.id === "empty") {
+        const newUser = {
+          id: "2", // Use an appropriate ID for the new user
+          first_name: "",
+          last_name: "",
+          username: "",
+          email: "",
+          job_title_id: "",
+          user_type_id: "",
+          tenant_id: "1",
+        };
 
-    if (over && active?.data?.current?.type === "empty") {
-      const newUser = {
-        id: "2",
-        first_name: "",
-        last_name: "",
-        username: "",
-        email: "",
-        job_title_id: "",
-        user_type_id: "",
-        tenant_id: "1",
-      };
-      setUsers(prev => [newUser, ...prev]);
-      setShowInput(prev => !prev);
+        setUsers(users => {
+          const updatedUsers = [...users];
+          const overIndex = updatedUsers.findIndex(user => user.id === over.id);
+
+          if (overIndex === updatedUsers.length) {
+            updatedUsers.push(newUser); // Add new user to the end
+            return updatedUsers;
+          } else {
+            updatedUsers.splice(overIndex, 0, newUser); // Insert the new user at the position of the hovered user
+            return updatedUsers;
+          }
+        });
+
+        setShowInput(true);
+
+        return; // Exit early
+      }
     }
 
     if (dragItem && active.id !== over?.id) {
@@ -153,6 +171,7 @@ export const WidgetContainer = () => {
       setWatch(true);
     }
   };
+
   if (loading) return <div>Loading</div>;
 
   return (
@@ -162,29 +181,29 @@ export const WidgetContainer = () => {
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-      <div className="grid grid-cols-2 m-3 gap-2">
-        <section>
-          <EmptyItem id="1" />
-        </section>
-        <div ref={setNodeRef}>
-          <section className="flex gap-1 items-center">
-            <button
-              className={showInput ? "cursor-not-allowed opacity-50" : ""}
-              disabled={showInput}
-              onClick={handleAddUser}
-            >
-              <FiPlus />
-            </button>
-            <button
-              className={watch ? "" : "opacity-50"}
-              disabled={!watch}
-              onClick={handleSaveUsers}
-            >
-              <FiSave />
-            </button>
-          </section>
+      <SortableContext items={[...users.map(user => user.id), "empty"]}>
+        <div className="grid grid-cols-2 m-3 gap-2">
+          <div className="z-10">
+            <EmptyItem id="empty" />
+          </div>
+          <div>
+            <section className="flex gap-1 items-center">
+              <button
+                className={showInput ? "cursor-not-allowed opacity-50" : ""}
+                disabled={showInput}
+                onClick={handleAddUser}
+              >
+                <FiPlus />
+              </button>
+              <button
+                className={watch ? "" : "opacity-50"}
+                disabled={!watch}
+                onClick={handleSaveUsers}
+              >
+                <FiSave />
+              </button>
+            </section>
 
-          <SortableContext items={users}>
             {users.map((user, index) => (
               <UserLists
                 key={user.id}
@@ -202,9 +221,9 @@ export const WidgetContainer = () => {
                 }}
               />
             ))}
-          </SortableContext>
+          </div>
         </div>
-      </div>
+      </SortableContext>
     </DndContext>
   );
 };
