@@ -52,7 +52,7 @@ export const fetchData = async <T>(url: string): Promise<T[]> => {
     });
     return response.data as T[];
   } catch (error) {
-    console.error("Error fetching Data", error);
+    console.error("Error fetching Data");
     throw new Error("Failed To fetch Data");
   }
 };

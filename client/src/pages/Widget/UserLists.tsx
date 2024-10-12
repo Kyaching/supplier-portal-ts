@@ -59,7 +59,7 @@ export interface UserDetail {
   order?: number;
 }
 
-interface UserListProps {
+export interface UserListProps {
   user: UserDetail;
   index: number;
   handleRemoveUser: (id: string) => void;
@@ -104,7 +104,7 @@ export const UserLists: React.FC<UserListProps> = ({
   const {data: jobTitles} = useGet<job_title>("/job_titles");
   const {attributes, listeners, setNodeRef, transition, transform, isDragging} =
     useSortable({
-      id: user.id,
+      id: user?.id,
       data: {
         type: "user",
       },

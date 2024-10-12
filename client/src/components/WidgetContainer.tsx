@@ -2,6 +2,7 @@ import {useDelete, useGet, useUpdate} from "@/hooks/useApiCall";
 import {UserDetail, UserLists} from "@/pages/Widget/UserLists";
 import {
   DndContext,
+  DragOverEvent,
   DragStartEvent,
   PointerSensor,
   useSensor,
@@ -17,28 +18,59 @@ import {
 } from "@dnd-kit/modifiers";
 import {EmptyItem} from "@/pages/Widget/EmptyItem";
 import toast from "react-hot-toast";
+import {UserContainer} from "@/pages/Widget/UserContainer";
+import {Item} from "@radix-ui/react-select";
 
 export type maxmimizeUser = {
   [id: string]: boolean;
 };
 
+// interface Items {
+//   root: string[];
+//   container: UserDetail[];
+// }
+
+interface item {
+  id: number;
+  name: string;
+}
 export const WidgetContainer = () => {
   const storedState = localStorage.getItem("maxsize");
   const currentState = storedState ? JSON.parse(storedState) : {};
   const {data, loading, get} = useGet<UserDetail>("/users");
-
+  const [leftItem, setLeftItem] = useState<UserDetail[]>([
+    {
+      id: "root",
+      first_name: "",
+      last_name: "",
+      username: "",
+      email: "",
+      job_title_id: "",
+      user_type_id: "",
+      tenant_id: "1",
+    },
+  ]);
   const {update} = useUpdate<UserDetail | UserDetail[]>();
   const {remove} = useDelete();
   const [showInput, setShowInput] = useState<boolean>(false);
   const [isAllFilled, setIsAllFilled] = useState<boolean>(false);
   const [users, setUsers] = useState<UserDetail[]>([]);
+  const [items, setItems] = useState({
+    root: ["1"],
+    container: users,
+  });
   const [watch, setWatch] = useState<boolean>(false);
   const [maximizeId, setMaximizeId] = useState<maxmimizeUser>(currentState);
   const [dragItem, setDragItem] = useState(false);
+  const [hasAddedEmpty, setHasAddedEmpty] = useState(false);
 
   useEffect(() => {
     if (data) {
       setUsers(data);
+      setItems(prev => ({
+        ...prev,
+        container: data,
+      }));
     }
   }, [data]);
 
@@ -59,6 +91,7 @@ export const WidgetContainer = () => {
   const handleRemoveUser = async (id: string) => {
     if (id === "2") {
       setShowInput(false);
+      setHasAddedEmpty(false);
       return setUsers(users.filter(user => user.id !== id));
     }
     await remove(`/users/${id}`);
@@ -118,41 +151,50 @@ export const WidgetContainer = () => {
 
   const handleDragStart = (event: DragStartEvent) => {
     const {active} = event;
+
     setDragItem(users.some(user => user.id === active.id));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const {active, over} = event;
-    if (over) {
-      if (active.id === "empty") {
-        const newUser = {
-          id: "2", // Use an appropriate ID for the new user
-          first_name: "",
-          last_name: "",
-          username: "",
-          email: "",
-          job_title_id: "",
-          user_type_id: "",
-          tenant_id: "1",
-        };
+    console.log("Active:", active);
+    console.log("Over:", over?.id);
 
-        setUsers(users => {
-          const updatedUsers = [...users];
-          const overIndex = updatedUsers.findIndex(user => user.id === over.id);
+    if (!over) {
+      return;
+    }
 
-          if (overIndex === updatedUsers.length) {
-            updatedUsers.push(newUser); // Add new user to the end
-            return updatedUsers;
-          } else {
-            updatedUsers.splice(overIndex, 0, newUser); // Insert the new user at the position of the hovered user
-            return updatedUsers;
-          }
-        });
+    if (active.id === "root" && !hasAddedEmpty) {
+      const newUser = {
+        id: "2", // Use an appropriate ID for the new user
+        first_name: "",
+        last_name: "",
+        username: "",
+        email: "",
+        job_title_id: "",
+        user_type_id: "",
+        tenant_id: "1",
+      };
 
-        setShowInput(true);
+      setUsers(users => {
+        const updatedUsers = [...users];
+        const overIndex = updatedUsers.findIndex(user => user.id === over?.id);
 
-        return; // Exit early
-      }
+        if (overIndex === updatedUsers.length) {
+          updatedUsers.push(newUser);
+
+          return updatedUsers;
+        } else {
+          updatedUsers.splice(overIndex, 0, newUser);
+
+          return updatedUsers;
+        }
+      });
+
+      setShowInput(true);
+      setHasAddedEmpty(true);
+
+      return;
     }
 
     if (dragItem && active.id !== over?.id) {
@@ -172,6 +214,26 @@ export const WidgetContainer = () => {
     }
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const {active, over} = event;
+    console.log("Active:", active);
+    console.log("Over:", over);
+    if (over && active.id === "root") {
+      const overIndex = users.findIndex(user => user.id === over.id);
+      console.log("Over Index:", overIndex);
+      if (overIndex !== -1) {
+        setUsers(prev => {
+          console.log("Before Move:", prev);
+          const newUsers = arrayMove(prev, prev.length - 1, overIndex + 1); // Move from the end
+          console.log("After Move:", newUsers);
+          return newUsers;
+        });
+      } else {
+        console.warn("Invalid overIndex:", overIndex);
+      }
+    }
+  };
+
   if (loading) return <div>Loading</div>;
 
   return (
@@ -179,51 +241,46 @@ export const WidgetContainer = () => {
       modifiers={dragItem ? userItem : emptyItem}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
       sensors={sensors}
     >
-      <SortableContext items={[...users.map(user => user.id), "empty"]}>
-        <div className="grid grid-cols-2 m-3 gap-2">
+      <div className="grid grid-cols-2 m-3 gap-2">
+        <SortableContext items={[...leftItem]}>
           <div className="z-10">
-            <EmptyItem id="empty" />
+            <EmptyItem id="root" />
           </div>
-          <div>
-            <section className="flex gap-1 items-center">
-              <button
-                className={showInput ? "cursor-not-allowed opacity-50" : ""}
-                disabled={showInput}
-                onClick={handleAddUser}
-              >
-                <FiPlus />
-              </button>
-              <button
-                className={watch ? "" : "opacity-50"}
-                disabled={!watch}
-                onClick={handleSaveUsers}
-              >
-                <FiSave />
-              </button>
-            </section>
+        </SortableContext>
+        <div>
+          <section className="flex gap-1 items-center">
+            <button
+              className={showInput ? "cursor-not-allowed opacity-50" : ""}
+              disabled={showInput}
+              onClick={handleAddUser}
+            >
+              <FiPlus />
+            </button>
+            <button
+              className={watch ? "" : "opacity-50"}
+              disabled={!watch}
+              onClick={handleSaveUsers}
+            >
+              <FiSave />
+            </button>
+          </section>
 
-            {users.map((user, index) => (
-              <UserLists
-                key={user.id}
-                user={user}
-                index={index}
-                handleRemoveUser={handleRemoveUser}
-                setWatch={setWatch}
-                setIsAllFilled={setIsAllFilled}
-                maximize={maximizeId[user.id] || false}
-                handleMaximizeUser={handleMaximizeUser}
-                updateUser={(updatedUser: UserDetail) => {
-                  setUsers(prev =>
-                    prev.map(u => (u.id === updatedUser.id ? updatedUser : u))
-                  );
-                }}
-              />
-            ))}
-          </div>
+          <UserContainer
+            id="container"
+            setWatch={setWatch}
+            // items={items.container}
+            users={users}
+            setUsers={setUsers}
+            setIsAllFilled={setIsAllFilled}
+            maximizeId={maximizeId}
+            handleRemoveUser={handleRemoveUser}
+            handleMaximizeUser={handleMaximizeUser}
+          />
         </div>
-      </SortableContext>
+      </div>
     </DndContext>
   );
 };
