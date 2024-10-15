@@ -1,6 +1,6 @@
 import {useDroppable} from "@dnd-kit/core";
 import {UserDetail, UserLists} from "./UserLists";
-import {SortableContext} from "@dnd-kit/sortable";
+import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
 import {maxmimizeUser} from "@/components/WidgetContainer";
 
 interface UserListContainerProps {
@@ -32,8 +32,11 @@ export const UserContainer: React.FC<UserListContainerProps> = ({
     },
   });
   return (
-    <div ref={setNodeRef} className="bg-red-200 min-h-96">
-      <SortableContext items={[...users, "root"]}>
+    <div ref={setNodeRef} className="border-2">
+      <SortableContext
+        // strategy={verticalListSortingStrategy}
+        items={[...users, "root"]}
+      >
         {users.map((user, index) => (
           <UserLists
             key={user?.id}

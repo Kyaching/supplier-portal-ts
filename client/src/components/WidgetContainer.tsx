@@ -1,6 +1,7 @@
 import {useDelete, useGet, useUpdate} from "@/hooks/useApiCall";
 import {UserDetail, UserLists} from "@/pages/Widget/UserLists";
 import {
+  closestCenter,
   DndContext,
   DragOverEvent,
   DragStartEvent,
@@ -55,22 +56,17 @@ export const WidgetContainer = () => {
   const [showInput, setShowInput] = useState<boolean>(false);
   const [isAllFilled, setIsAllFilled] = useState<boolean>(false);
   const [users, setUsers] = useState<UserDetail[]>([]);
-  const [items, setItems] = useState({
-    root: ["1"],
-    container: users,
-  });
+
   const [watch, setWatch] = useState<boolean>(false);
   const [maximizeId, setMaximizeId] = useState<maxmimizeUser>(currentState);
   const [dragItem, setDragItem] = useState(false);
   const [hasAddedEmpty, setHasAddedEmpty] = useState(false);
+  const [draggedIndex, setdraggedIndex] = useState<number | null>(null);
+  const [isEmptyContainerActive, setIsEmptyContainerActive] = useState(false);
 
   useEffect(() => {
     if (data) {
       setUsers(data);
-      setItems(prev => ({
-        ...prev,
-        container: data,
-      }));
     }
   }, [data]);
 
@@ -151,6 +147,10 @@ export const WidgetContainer = () => {
 
   const handleDragStart = (event: DragStartEvent) => {
     const {active} = event;
+    setIsEmptyContainerActive(false);
+    // if (active.id === "root" && !isEmptyContainerActive) {
+    //   setIsEmptyContainerActive(true);
+    // }
 
     setDragItem(users.some(user => user.id === active.id));
   };
@@ -163,7 +163,7 @@ export const WidgetContainer = () => {
     if (!over) {
       return;
     }
-
+    const overIndex = users.findIndex(user => user.id === over.id);
     if (active.id === "root" && !hasAddedEmpty) {
       const newUser = {
         id: "2", // Use an appropriate ID for the new user
@@ -176,26 +176,55 @@ export const WidgetContainer = () => {
         tenant_id: "1",
       };
 
-      setUsers(users => {
-        const updatedUsers = [...users];
-        const overIndex = updatedUsers.findIndex(user => user.id === over?.id);
-
-        if (overIndex === updatedUsers.length) {
-          updatedUsers.push(newUser);
-
-          return updatedUsers;
-        } else {
-          updatedUsers.splice(overIndex, 0, newUser);
-
-          return updatedUsers;
-        }
-      });
+      if (overIndex === 0) {
+        setUsers(prevUsers => {
+          const newUsers = [newUser, ...prevUsers]; // Add above User 1
+          return newUsers;
+        });
+      } else if (overIndex === users.length - 1) {
+        // If hovering over the last user, insert below
+        setUsers(prevUsers => {
+          return [...prevUsers, newUser]; // Append to the end
+        });
+      } else {
+        // Insert the new user input field based on the hovered user's index
+        setUsers(prevUsers => {
+          const newUsers = [...prevUsers];
+          newUsers.splice(overIndex, 0, newUser); // Insert above the hovered user
+          return newUsers;
+        });
+      }
 
       setShowInput(true);
       setHasAddedEmpty(true);
 
       return;
     }
+
+    // if (active.id === "root") {
+    //   const newUser = {
+    //     id: "2", // Use an appropriate ID for the new user
+    //     first_name: "",
+    //     last_name: "",
+    //     username: "",
+    //     email: "",
+    //     job_title_id: "",
+    //     user_type_id: "",
+    //     tenant_id: "1",
+    //   };
+    //   setUsers(prevUsers => {
+    //     const overIndex = prevUsers.findIndex(user => user.id === over.id);
+
+    //     if (overIndex === -1) {
+    //       return [...prevUsers, newUser];
+    //     } else {
+    //       const newUserList = [...prevUsers];
+    //       newUserList.splice(overIndex, 0, newUser);
+
+    //       return newUserList;
+    //     }
+    //   });
+    // }
 
     if (dragItem && active.id !== over?.id) {
       setUsers(users => {
@@ -216,20 +245,33 @@ export const WidgetContainer = () => {
 
   const handleDragOver = (event: DragOverEvent) => {
     const {active, over} = event;
-    console.log("Active:", active);
-    console.log("Over:", over);
-    if (over && active.id === "root") {
-      const overIndex = users.findIndex(user => user.id === over.id);
-      console.log("Over Index:", overIndex);
+    const activeId = active.id;
+    const overId = over?.id;
+
+    const newUser = {
+      id: "2", // Use an appropriate ID for the new user
+      first_name: "",
+      last_name: "",
+      username: "",
+      email: "",
+      job_title_id: "",
+      user_type_id: "",
+      tenant_id: "1",
+    };
+    if (!over) return;
+    if (activeId === "root" && !isEmptyContainerActive && overId) {
+      console.log("hi");
+      const overIndex = users.findIndex(user => user.id === overId);
+
       if (overIndex !== -1) {
-        setUsers(prev => {
-          console.log("Before Move:", prev);
-          const newUsers = arrayMove(prev, prev.length - 1, overIndex + 1); // Move from the end
-          console.log("After Move:", newUsers);
-          return newUsers;
+        setUsers(prevUsers => {
+          return [
+            ...prevUsers.slice(0, overIndex),
+            newUser,
+            ...prevUsers.slice(overIndex),
+          ];
         });
-      } else {
-        console.warn("Invalid overIndex:", overIndex);
+        setIsEmptyContainerActive(true);
       }
     }
   };
@@ -240,16 +282,15 @@ export const WidgetContainer = () => {
     <DndContext
       modifiers={dragItem ? userItem : emptyItem}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      // onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
       sensors={sensors}
     >
       <div className="grid grid-cols-2 m-3 gap-2">
-        <SortableContext items={[...leftItem]}>
-          <div className="z-10">
-            <EmptyItem id="root" />
-          </div>
-        </SortableContext>
+        <div className="z-10">
+          <EmptyItem id="root" />
+        </div>
+
         <div>
           <section className="flex gap-1 items-center">
             <button

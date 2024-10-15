@@ -33,7 +33,7 @@ export const EmptyItem: React.FC<UserId> = ({id}) => {
       {...listeners}
       className="w-4/5"
     >
-      {isDragging ? (
+      {/* {isDragging ? (
         <div>
           <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab">
             <span>0</span>
@@ -98,7 +98,13 @@ export const EmptyItem: React.FC<UserId> = ({id}) => {
             <Input className="h-6 w-1/2 bg-white border-white" />
           </div>
         </>
-      )}
+      )} */}
+      <>
+        <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab"></header>
+        <div className="bg-[#8bf1dd] p-2 rounded-b-sm">
+          <Input className="h-6 w-1/2 bg-white border-white" />
+        </div>
+      </>
     </div>
   );
 };
