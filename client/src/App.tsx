@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {Navbar} from "./components/Navbar";
 import {SidebarMenu} from "./components/SidebarMenu";
-import {Route, Routes} from "react-router-dom";
+import {Navigate, Route, Routes} from "react-router-dom";
 import {AddUser} from "./pages/users/AddUser";
 import {AllUsers} from "./pages/users/AllUsers";
 import {AddDepartment} from "./pages/Departments/AddDepartment";
@@ -13,6 +13,10 @@ import {MasterDetailsContainer} from "./components/MasterDetailsContainer";
 import {WidgetContainer} from "./components/WidgetContainer";
 import {Login} from "./pages/Login/Login";
 import {useAuthContext} from "./hooks/useAuth";
+import {NotificationsContainer} from "./components/NotificationsContainer";
+import {InboxPage} from "./pages/Notifications/InboxPage";
+import {SentPage} from "./pages/Notifications/SentPage";
+import {DraftPage} from "./pages/Notifications/DraftPage";
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -37,6 +41,15 @@ function App() {
                   element={<MasterDetailsContainer />}
                 />
                 <Route path="/widget" element={<WidgetContainer />} />
+                <Route
+                  path="/notification"
+                  element={<NotificationsContainer />}
+                >
+                  <Route path="" element={<Navigate to="inbox" />} />
+                  <Route path="inbox" element={<InboxPage />} />
+                  <Route path="sent" element={<SentPage />} />
+                  <Route path="draft" element={<DraftPage />} />
+                </Route>
               </Routes>
               <Toaster />
             </div>

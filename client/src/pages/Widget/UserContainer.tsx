@@ -2,6 +2,7 @@ import {useDroppable} from "@dnd-kit/core";
 import {UserDetail, UserLists} from "./UserLists";
 import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
 import {maxmimizeUser} from "@/components/WidgetContainer";
+import {EmptyItem} from "./EmptyItem";
 
 interface UserListContainerProps {
   id: string;
@@ -11,15 +12,16 @@ interface UserListContainerProps {
   maximizeId: maxmimizeUser;
   handleMaximizeUser: (id: string) => void;
   // items: UserDetail[];
+  items: UserDetail[];
   users: UserDetail[];
   setUsers: React.Dispatch<React.SetStateAction<UserDetail[]>>;
 }
 
 export const UserContainer: React.FC<UserListContainerProps> = ({
-  users,
   setUsers,
   handleRemoveUser,
   id,
+  items,
   setWatch,
   setIsAllFilled,
   maximizeId,
@@ -27,33 +29,36 @@ export const UserContainer: React.FC<UserListContainerProps> = ({
 }) => {
   const {setNodeRef} = useDroppable({
     id: id,
-    data: {
-      accepts: ["empty"],
-    },
   });
   return (
-    <div ref={setNodeRef} className="border-2">
+    <div className="border-2">
       <SortableContext
-        // strategy={verticalListSortingStrategy}
-        items={[...users, "root"]}
+        id={id}
+        strategy={verticalListSortingStrategy}
+        items={items.map(item => item.id)}
       >
-        {users.map((user, index) => (
-          <UserLists
-            key={user?.id}
-            user={user}
-            index={index}
-            handleRemoveUser={handleRemoveUser}
-            setWatch={setWatch}
-            setIsAllFilled={setIsAllFilled}
-            maximize={maximizeId[user?.id] || false}
-            handleMaximizeUser={handleMaximizeUser}
-            updateUser={(updatedUser: UserDetail) => {
-              setUsers(prev =>
-                prev.map(u => (u.id === updatedUser.id ? updatedUser : u))
-              );
-            }}
-          />
-        ))}
+        <div ref={setNodeRef}>
+          {id === "root" &&
+            items.map(item => <EmptyItem key={item.id} item={item} />)}
+          {id === "container" &&
+            items.map((user, index) => (
+              <UserLists
+                key={user.id}
+                item={user}
+                index={index}
+                handleRemoveUser={handleRemoveUser}
+                setWatch={setWatch}
+                setIsAllFilled={setIsAllFilled}
+                maximize={maximizeId[user.id] || false}
+                handleMaximizeUser={handleMaximizeUser}
+                updateUser={(updatedUser: UserDetail) => {
+                  setUsers(prev =>
+                    prev.map(u => (u.id === updatedUser.id ? updatedUser : u))
+                  );
+                }}
+              />
+            ))}
+        </div>
       </SortableContext>
     </div>
   );

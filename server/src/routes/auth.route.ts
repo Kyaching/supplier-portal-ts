@@ -15,9 +15,10 @@ router.post("/login", async (req: Request, res: Response) => {
   const {username, password} = req.body;
   try {
     const user = await prisma.users.findUnique({
-      where: {username, password},
+      where: {username},
     });
-    if (!user || user.password !== password) {
+
+    if (!user) {
       return res.status(404).send({success: false});
     }
     const token = jwt.sign(
@@ -25,12 +26,20 @@ router.post("/login", async (req: Request, res: Response) => {
       JWT_SECRET,
       {expiresIn: "1h"}
     );
-    res.cookie("token", token, {httpOnly: true, secure: false});
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+    });
     res.json({success: true});
   } catch (error) {
     console.error(error);
     res.status(500).json({error: "Internal server error"});
   }
+});
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({success: true});
 });
 
 router.get("/profile", authMiddleware, async (req: AuthUser, res) => {

@@ -1,5 +1,5 @@
 import axios from "axios";
-const BASE_URL = import.meta.env.VITE_SERVER_URL;
+export const BASE_URL = import.meta.env.VITE_SERVER_URL;
 
 export interface UserData {
   username: string;
@@ -52,7 +52,7 @@ export const fetchData = async <T>(url: string): Promise<T[]> => {
     });
     return response.data as T[];
   } catch (error) {
-    console.error("Error fetching Data");
+    console.error("Error fetching Data", error);
     throw new Error("Failed To fetch Data");
   }
 };

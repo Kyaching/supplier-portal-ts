@@ -1,5 +1,5 @@
 import {useDelete, useGet, useUpdate} from "@/hooks/useApiCall";
-import {UserDetail, UserLists} from "@/pages/Widget/UserLists";
+import {UserDetail} from "@/pages/Widget/UserLists";
 import {
   closestCenter,
   DndContext,
@@ -9,66 +9,67 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {arrayMove, SortableContext} from "@dnd-kit/sortable";
+import {arrayMove} from "@dnd-kit/sortable";
 import {useEffect, useState} from "react";
 import {FiPlus, FiSave} from "react-icons/fi";
 import {DragEndEvent} from "@dnd-kit/core";
-import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
-} from "@dnd-kit/modifiers";
-import {EmptyItem} from "@/pages/Widget/EmptyItem";
+
 import toast from "react-hot-toast";
 import {UserContainer} from "@/pages/Widget/UserContainer";
-import {Item} from "@radix-ui/react-select";
 
 export type maxmimizeUser = {
   [id: string]: boolean;
 };
 
-// interface Items {
-//   root: string[];
-//   container: UserDetail[];
-// }
-
-interface item {
-  id: number;
-  name: string;
+interface ItemsState {
+  root: UserDetail[];
+  container: UserDetail[];
 }
+
 export const WidgetContainer = () => {
   const storedState = localStorage.getItem("maxsize");
   const currentState = storedState ? JSON.parse(storedState) : {};
   const {data, loading, get} = useGet<UserDetail>("/users");
-  const [leftItem, setLeftItem] = useState<UserDetail[]>([
-    {
-      id: "root",
-      first_name: "",
-      last_name: "",
-      username: "",
-      email: "",
-      job_title_id: "",
-      user_type_id: "",
-      tenant_id: "1",
-    },
-  ]);
+
   const {update} = useUpdate<UserDetail | UserDetail[]>();
   const {remove} = useDelete();
   const [showInput, setShowInput] = useState<boolean>(false);
   const [isAllFilled, setIsAllFilled] = useState<boolean>(false);
   const [users, setUsers] = useState<UserDetail[]>([]);
-
+  const [items, setItems] = useState<ItemsState>({
+    root: [
+      {
+        id: "2",
+        first_name: "",
+        last_name: "",
+        username: "",
+        email: "",
+        job_title_id: "",
+        user_type_id: "",
+        tenant_id: "1",
+      },
+    ],
+    container: [],
+  });
   const [watch, setWatch] = useState<boolean>(false);
   const [maximizeId, setMaximizeId] = useState<maxmimizeUser>(currentState);
   const [dragItem, setDragItem] = useState(false);
   const [hasAddedEmpty, setHasAddedEmpty] = useState(false);
-  const [draggedIndex, setdraggedIndex] = useState<number | null>(null);
-  const [isEmptyContainerActive, setIsEmptyContainerActive] = useState(false);
 
   useEffect(() => {
     if (data) {
       setUsers(data);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (users) {
+      setItems(prev => ({
+        ...prev,
+        container: users,
+      }));
+    }
+  }, [users]);
 
   const handleMaximizeUser = (id: string) => {
     const storedState = localStorage.getItem("maxsize");
@@ -93,6 +94,7 @@ export const WidgetContainer = () => {
     await remove(`/users/${id}`);
     setUsers(users.filter(user => user.id !== id));
     setShowInput(false);
+    setHasAddedEmpty(false);
   };
 
   const handleAddUser = () => {
@@ -142,154 +144,161 @@ export const WidgetContainer = () => {
     },
   });
   const sensors = useSensors(pointer);
-  const userItem = [restrictToVerticalAxis, restrictToWindowEdges];
-  const emptyItem = [restrictToWindowEdges];
+  // const userItem = [restrictToVerticalAxis, restrictToWindowEdges];
+  // const emptyItem = [restrictToWindowEdges];
 
+  const containerOrder = {
+    root: 0,
+    container: 1,
+    // Add more containers here with their order if needed
+  };
+
+  function findContainer(id: string | number) {
+    // Check if the id corresponds to a top-level key
+    if (id in items) {
+      return id;
+    }
+
+    // Check each container for an item with the given id
+    return Object.keys(items).find(key =>
+      items[key as keyof ItemsState].some(item => item.id === id)
+    );
+  }
   const handleDragStart = (event: DragStartEvent) => {
     const {active} = event;
-    setIsEmptyContainerActive(false);
-    // if (active.id === "root" && !isEmptyContainerActive) {
-    //   setIsEmptyContainerActive(true);
-    // }
 
     setDragItem(users.some(user => user.id === active.id));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const {active, over} = event;
-    console.log("Active:", active);
-    console.log("Over:", over?.id);
+    const {id} = active;
+    const overId = over?.id;
 
-    if (!over) {
-      return;
+    const activeContainer = findContainer(id) as keyof ItemsState;
+    let overContainer: keyof ItemsState | undefined;
+    if (overId !== undefined) {
+      overContainer = findContainer(overId) as keyof ItemsState;
     }
-    const overIndex = users.findIndex(user => user.id === over.id);
-    if (active.id === "root" && !hasAddedEmpty) {
-      const newUser = {
-        id: "2", // Use an appropriate ID for the new user
-        first_name: "",
-        last_name: "",
-        username: "",
-        email: "",
-        job_title_id: "",
-        user_type_id: "",
-        tenant_id: "1",
-      };
 
-      if (overIndex === 0) {
-        setUsers(prevUsers => {
-          const newUsers = [newUser, ...prevUsers]; // Add above User 1
-          return newUsers;
-        });
-      } else if (overIndex === users.length - 1) {
-        // If hovering over the last user, insert below
-        setUsers(prevUsers => {
-          return [...prevUsers, newUser]; // Append to the end
-        });
-      } else {
-        // Insert the new user input field based on the hovered user's index
-        setUsers(prevUsers => {
-          const newUsers = [...prevUsers];
-          newUsers.splice(overIndex, 0, newUser); // Insert above the hovered user
-          return newUsers;
-        });
-      }
-
-      setShowInput(true);
-      setHasAddedEmpty(true);
-
+    // If the item is dropped outside any container, just return
+    if (!activeContainer || !overContainer) {
       return;
     }
 
-    // if (active.id === "root") {
-    //   const newUser = {
-    //     id: "2", // Use an appropriate ID for the new user
-    //     first_name: "",
-    //     last_name: "",
-    //     username: "",
-    //     email: "",
-    //     job_title_id: "",
-    //     user_type_id: "",
-    //     tenant_id: "1",
-    //   };
-    //   setUsers(prevUsers => {
-    //     const overIndex = prevUsers.findIndex(user => user.id === over.id);
+    // If the item is dropped in the same container, handle reordering
+    if (activeContainer === overContainer) {
+      const activeIndex = items[activeContainer].findIndex(
+        item => item.id === id
+      );
+      const overIndex = items[overContainer].findIndex(
+        item => item.id === overId
+      );
 
-    //     if (overIndex === -1) {
-    //       return [...prevUsers, newUser];
-    //     } else {
-    //       const newUserList = [...prevUsers];
-    //       newUserList.splice(overIndex, 0, newUser);
-
-    //       return newUserList;
-    //     }
-    //   });
-    // }
-
-    if (dragItem && active.id !== over?.id) {
-      setUsers(users => {
-        const oldIndex = users.findIndex(user => user.id === active.id);
-        const newIndex = users.findIndex(user => user.id === over?.id);
-        const newUsers = arrayMove(users, oldIndex, newIndex);
-
-        const updatedUsers = newUsers.map((item, index) => ({
-          ...item,
-          order: index,
+      if (activeIndex !== overIndex) {
+        setItems(items => ({
+          ...items,
+          [overContainer]: arrayMove(
+            items[overContainer],
+            activeIndex,
+            overIndex
+          ),
         }));
-
-        return updatedUsers;
-      });
-      setWatch(true);
+      }
     }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const {active, over} = event;
-    const activeId = active.id;
+    const {active, over, delta} = event;
+
+    const {id} = active;
     const overId = over?.id;
+    console.log("active", id);
+    console.log("overId", overId);
+    const activeContainer = findContainer(id) as keyof ItemsState;
+    let overContainer: keyof ItemsState | undefined;
+    if (overId !== undefined) {
+      overContainer = findContainer(overId) as keyof ItemsState;
+    }
 
-    const newUser = {
-      id: "2", // Use an appropriate ID for the new user
-      first_name: "",
-      last_name: "",
-      username: "",
-      email: "",
-      job_title_id: "",
-      user_type_id: "",
-      tenant_id: "1",
-    };
-    if (!over) return;
-    if (activeId === "root" && !isEmptyContainerActive && overId) {
-      console.log("hi");
-      const overIndex = users.findIndex(user => user.id === overId);
+    if (
+      !activeContainer ||
+      !overContainer ||
+      activeContainer === overContainer
+    ) {
+      return;
+    }
 
-      if (overIndex !== -1) {
-        setUsers(prevUsers => {
-          return [
-            ...prevUsers.slice(0, overIndex),
-            newUser,
-            ...prevUsers.slice(overIndex),
-          ];
-        });
-        setIsEmptyContainerActive(true);
-      }
+    if (
+      containerOrder[activeContainer] < containerOrder[overContainer] &&
+      !hasAddedEmpty
+    ) {
+      setItems(prev => {
+        const activeItems = prev[activeContainer];
+        const overItems = prev[overContainer];
+
+        const activeIndex = activeItems.findIndex(item => item.id === id);
+        const overIndex = overItems.findIndex(item => item.id === id);
+
+        let newIndex;
+        if (overId !== undefined && overId in prev) {
+          // We're at the root droppable of a container
+          newIndex = overItems.length; // Move to the end of the container
+        } else {
+          const isBelowLastItem =
+            over && overIndex === overItems.length - 1 && delta.y > 0;
+          const modifier = isBelowLastItem ? 1 : 0;
+          newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length;
+        }
+
+        return {
+          ...prev,
+          [activeContainer]: [
+            ...prev[activeContainer].filter(item => item.id !== id),
+            {
+              id: Date.now().toString(),
+              first_name: "",
+              last_name: "",
+              username: "",
+              email: "",
+              job_title_id: "",
+              user_type_id: "",
+              tenant_id: "1",
+            },
+          ],
+          [overContainer]: [
+            ...prev[overContainer].slice(0, newIndex),
+            activeItems[activeIndex],
+            ...prev[overContainer].slice(newIndex),
+          ],
+        };
+      });
+      setHasAddedEmpty(true);
     }
   };
 
   if (loading) return <div>Loading</div>;
-
   return (
     <DndContext
-      modifiers={dragItem ? userItem : emptyItem}
+      collisionDetection={closestCenter}
+      // modifiers={dragItem ? userItem : emptyItem}
       onDragStart={handleDragStart}
-      // onDragEnd={handleDragEnd}
+      onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
       sensors={sensors}
     >
       <div className="grid grid-cols-2 m-3 gap-2">
-        <div className="z-10">
-          <EmptyItem id="root" />
-        </div>
+        <UserContainer
+          id="root"
+          items={items?.root}
+          setWatch={setWatch}
+          users={users}
+          setUsers={setUsers}
+          setIsAllFilled={setIsAllFilled}
+          maximizeId={maximizeId}
+          handleRemoveUser={handleRemoveUser}
+          handleMaximizeUser={handleMaximizeUser}
+        />
 
         <div>
           <section className="flex gap-1 items-center">
@@ -308,11 +317,10 @@ export const WidgetContainer = () => {
               <FiSave />
             </button>
           </section>
-
           <UserContainer
             id="container"
+            items={items?.container}
             setWatch={setWatch}
-            // items={items.container}
             users={users}
             setUsers={setUsers}
             setIsAllFilled={setIsAllFilled}

@@ -1,5 +1,4 @@
 import {Input} from "@/components/ui/input";
-import {useDraggable} from "@dnd-kit/core";
 import {FiMaximize, FiTrash} from "react-icons/fi";
 import {Label} from "@/components/ui/label";
 import {
@@ -9,21 +8,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {useSortable} from "@dnd-kit/sortable";
+import {UserDetail} from "./UserLists";
+interface ItemProps {
+  item: UserDetail;
+}
 
-type UserId = {
-  id: string;
-};
-export const EmptyItem: React.FC<UserId> = ({id}) => {
-  const {attributes, listeners, setNodeRef, transform, isDragging} =
-    useDraggable({
-      id: id,
-      data: {
-        type: "empty",
-      },
+export const EmptyItem: React.FC<ItemProps> = ({item}) => {
+  const {attributes, listeners, setNodeRef, transition, transform, isDragging} =
+    useSortable({
+      id: item?.id,
     });
   const style = {
     transform: `translate3d(${transform?.x ?? 0}px, ${transform?.y ?? 0}px,0)`,
-    zIndex: 1,
+    transition,
+    opacity: isDragging ? "0.6" : undefined,
   };
   return (
     <div
@@ -31,9 +30,9 @@ export const EmptyItem: React.FC<UserId> = ({id}) => {
       style={style}
       {...attributes}
       {...listeners}
-      className="w-4/5"
+      className="w-3/5"
     >
-      {/* {isDragging ? (
+      {isDragging ? (
         <div>
           <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab">
             <span>0</span>
@@ -92,19 +91,13 @@ export const EmptyItem: React.FC<UserId> = ({id}) => {
           </div>
         </div>
       ) : (
-        <>
+        <div>
           <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab"></header>
           <div className="bg-[#8bf1dd] p-2 rounded-b-sm">
             <Input className="h-6 w-1/2 bg-white border-white" />
           </div>
-        </>
-      )} */}
-      <>
-        <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab"></header>
-        <div className="bg-[#8bf1dd] p-2 rounded-b-sm">
-          <Input className="h-6 w-1/2 bg-white border-white" />
         </div>
-      </>
+      )}
     </div>
   );
 };

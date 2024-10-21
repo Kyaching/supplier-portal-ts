@@ -35,7 +35,7 @@ export const usePost = <T>(url: string) => {
 };
 
 export const useGet = <T>(url: string) => {
-  const [data, setData] = useState<T[]>([]);
+  const [data, setData] = useState<T | T[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

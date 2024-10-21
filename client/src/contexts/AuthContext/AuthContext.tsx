@@ -1,9 +1,13 @@
 import {useGet, usePost} from "@/hooks/useApiCall";
+import {BASE_URL} from "@/utilities/services";
+import axios from "axios";
 import {createContext, useEffect, useState} from "react";
 
 interface AuthContextType {
   isLogged: boolean;
   handleLogin: (username: string, password: string) => void;
+  handleLogOut: () => void;
+  user: string | string[] | null;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -13,36 +17,43 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
   children,
 }) => {
-  const [user, setUser] = useState<string | null>(
+  const [user, setUser] = useState<string | string[] | null>(
     localStorage.getItem("username")
   );
   const [isLogged, setIsLogged] = useState(false);
   const {data} = useGet<string>("/profile");
-  const {post, status} = usePost<{username: string; password: string}>(
-    "/login"
-  );
-  console.log(data);
+  const {post: loginUser, status} = usePost<{
+    username: string;
+    password: string | null;
+  }>("/login");
+  const {post: logoutUser} = usePost<null>("/logout");
+
   useEffect(() => {
-    if ((data && status === true) || user) {
-      setIsLogged(true);
-      console.log(user);
+    const savedUser = localStorage.getItem("username");
+    setUser(savedUser);
+  }, [status]);
+
+  useEffect(() => {
+    if (data || status === true) {
       setUser(data);
+      setIsLogged(true);
+      localStorage.setItem("username", data);
     }
-  }, [data, status, user]);
+  }, [data, status]);
 
   const handleLogin = async (username: string, password: string) => {
-    await post({username, password});
+    await loginUser({username, password});
+  };
 
-    // if (status) setIsLogged(true);
-    // else setIsLogged(false);
-    if (status) {
-      localStorage.setItem("username", username);
-    }
-    console.log(status, isLogged);
+  const handleLogOut = async () => {
+    await logoutUser(null);
+    setUser(null);
+    localStorage.removeItem("username");
+    setIsLogged(false);
   };
 
   return (
-    <AuthContext.Provider value={{isLogged, handleLogin}}>
+    <AuthContext.Provider value={{isLogged, handleLogin, handleLogOut, user}}>
       {children}
     </AuthContext.Provider>
   );

@@ -60,7 +60,7 @@ export interface UserDetail {
 }
 
 export interface UserListProps {
-  user: UserDetail;
+  item: UserDetail;
   index: number;
   handleRemoveUser: (id: string) => void;
   updateUser: (updatedUser: UserDetail) => void;
@@ -91,7 +91,7 @@ const userInputs: IUserItem[] = [
 ];
 
 export const UserLists: React.FC<UserListProps> = ({
-  user,
+  item,
   index,
   handleRemoveUser,
   updateUser,
@@ -104,20 +104,16 @@ export const UserLists: React.FC<UserListProps> = ({
   const {data: jobTitles} = useGet<job_title>("/job_titles");
   const {attributes, listeners, setNodeRef, transition, transform, isDragging} =
     useSortable({
-      id: user?.id,
-      data: {
-        type: "user",
-      },
+      id: item?.id,
     });
-
   const form = useForm<UserDetail>({
     defaultValues: {
-      first_name: user.first_name,
-      last_name: user.last_name,
-      username: user.username,
-      email: user.email,
-      job_title_id: user.job_title_id,
-      user_type_id: user.user_type_id,
+      first_name: item.first_name,
+      last_name: item.last_name,
+      username: item.username,
+      email: item.email,
+      job_title_id: item.job_title_id,
+      user_type_id: item.user_type_id,
       tenant_id: "1",
     },
   });
@@ -132,7 +128,7 @@ export const UserLists: React.FC<UserListProps> = ({
   }, [isDirty, setWatch, allFieldsDirty, setIsAllFilled]);
 
   const handleChange = (fieldName: keyof UserDetail) => (value: unknown) => {
-    updateUser({...user, [fieldName]: value});
+    updateUser({...item, [fieldName]: value});
   };
 
   const handleToggleMaximize = (id: string) => {
@@ -156,7 +152,7 @@ export const UserLists: React.FC<UserListProps> = ({
       <header className="flex items-center justify-between text-base p-2 bg-[#18b192] text-white rounded-t-sm h-6 cursor-grab">
         <span>{index}</span>
         <div className="flex items-center gap-1">
-          <button onClick={() => handleToggleMaximize(user.id)}>
+          <button onClick={() => handleToggleMaximize(item.id)}>
             <FiMaximize />
           </button>
           <AlertDialog>
@@ -177,7 +173,7 @@ export const UserLists: React.FC<UserListProps> = ({
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-red-400 hover:bg-red-600"
-                  onClick={() => handleRemoveUser(user.id)}
+                  onClick={() => handleRemoveUser(item.id)}
                 >
                   Delete
                 </AlertDialogAction>
