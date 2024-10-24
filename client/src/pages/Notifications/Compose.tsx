@@ -16,16 +16,16 @@ import {FiInbox, FiPaperclip, FiSend} from "react-icons/fi";
 import {LuMailPlus} from "react-icons/lu";
 import {PopOverSelect} from "./PopOverSelect";
 import {useState} from "react";
+import {useNotificationContext} from "@/hooks/useNotification";
 
 export const Compose = () => {
-  // const {
-  //   handleDraft,
-  //   drafts,
-  //   handleSend,
-  //   sentMails,
-  //   inboxMails,
-  //   selectedUsers,
-  // } = useContext(MailContext);
+  const {
+    handleDraftMessage,
+    handleSendMessage,
+    drafts,
+    inboxMessage,
+    sentMessage,
+  } = useNotificationContext();
   const {register, handleSubmit, watch} = useForm();
   const watchSubject = watch("subject");
   const watchBody = watch("body");
@@ -36,30 +36,29 @@ export const Compose = () => {
       id: 1,
       icon: <FiInbox className="w-6 h-6" />,
       name: "Inbox",
-      // count: inboxMails?.length,
-      count: 1,
+      count: inboxMessage?.length,
+
       to: "inbox",
     },
     {
       id: 2,
       icon: <FiSend className="w-6 h-6" />,
       name: "Sent",
-      // count: sentMails?.length,
-      count: 1,
+      count: sentMessage?.length,
       to: "sent",
     },
     {
       id: 3,
       icon: <FiPaperclip className="w-6 h-6" />,
       name: "Draft",
-      // count: drafts?.length,
-      count: 1,
+      count: drafts?.length,
       to: "draft",
     },
   ];
 
   const onSubmit = data => {
-    console.log(data);
+    const newData = {...data, receivers: selectedUser};
+    console.log(newData);
   };
   return (
     <div className="relative">
@@ -107,19 +106,26 @@ export const Compose = () => {
               {watchSubject && watchBody && selectedUser.length > 0 && (
                 <>
                   <Button
-                    type="submit"
-                    // onClick={() =>
-                    //   handleDraft({subject: watchSubject, body: watchBody})
-                    // }
+                    onClick={() =>
+                      handleDraftMessage({
+                        subject: watchSubject,
+                        body: watchBody,
+                        receivers: selectedUser,
+                      })
+                    }
                     className="flex items-center gap-2 font-semibold text-md rounded-none rounded-l-full"
                   >
                     <FiPaperclip />
                     <span>Draft</span>
                   </Button>
                   <Button
-                    // onClick={() =>
-                    //   handleSend({subject: watchSubject, body: watchBody})
-                    // }
+                    onClick={() =>
+                      handleSendMessage({
+                        subject: watchSubject,
+                        body: watchBody,
+                        receivers: selectedUser,
+                      })
+                    }
                     className="flex items-center gap-2 font-semibold text-md rounded-none rounded-r-full"
                   >
                     <FiSend />

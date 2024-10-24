@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import {Avatar, AvatarFallback, AvatarImage} from "./ui/avatar";
+import image from "../assets/user.png";
 import {Button} from "./ui/button";
 import {useAuthContext} from "@/hooks/useAuth";
 const navLists: navItems[] = [
@@ -23,7 +24,7 @@ const navLists: navItems[] = [
 
 export const Navbar: (props: NavbarProps) => JSX.Element = ({setCollapsed}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const {handleLogOut, user} = useAuthContext();
+  const {handleLogOut, user, messageId} = useAuthContext();
 
   const handleCollapsed = () => {
     setCollapsed(prev => !prev);
@@ -54,7 +55,18 @@ export const Navbar: (props: NavbarProps) => JSX.Element = ({setCollapsed}) => {
                 }
               >
                 <span>{item.icon}</span>
-                <span className="capitalize">{item.name}</span>
+                {item.name === "notification" ? (
+                  <div className="relative">
+                    <span className="capitalize">{item.name}</span>
+                    {messageId && messageId.length > 0 && (
+                      <span className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-sm font-semibold">
+                        {messageId?.length}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="capitalize">{item.name}</span>
+                )}
               </NavLink>
             </li>
           ))}
@@ -63,10 +75,7 @@ export const Navbar: (props: NavbarProps) => JSX.Element = ({setCollapsed}) => {
           <DropdownMenuTrigger className="mr-2" asChild>
             <div className="flex gap-1">
               <Avatar className="cursor-pointer w-8 h-8">
-                <AvatarImage
-                  src="https://github.com/shadcn.png"
-                  alt="@shadcn"
-                />
+                <AvatarImage src={image} />
                 <AvatarFallback>Avatar</AvatarFallback>
               </Avatar>
               <span>{user}</span>

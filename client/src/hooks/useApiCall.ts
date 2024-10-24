@@ -20,6 +20,7 @@ export const usePost = <T>(url: string) => {
       const result = await sendData(url, payload);
       if (result.success) {
         setStatus(result.success);
+        return result;
       }
     } catch (err: unknown) {
       console.log(err);
@@ -72,6 +73,7 @@ export const useDelete = () => {
       const result = await removeData(url);
       if (result.message) {
         toast.success(result.message);
+        return result;
       }
       setStatus(result.message);
     } catch (err: unknown) {

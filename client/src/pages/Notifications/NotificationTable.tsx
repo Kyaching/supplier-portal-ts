@@ -1,9 +1,5 @@
-import {FiTrash} from "react-icons/fi";
-import PropTypes from "prop-types";
 import {TbScanEye} from "react-icons/tb";
-
 import {useLocation, useNavigate} from "react-router-dom";
-
 import {AiOutlineDelete} from "react-icons/ai";
 import {
   Table,
@@ -24,6 +20,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {MessageData} from "@/hooks/useMessages";
+import {recv_message} from "@/contexts/AuthContext/AuthContext";
+import {useAuthContext} from "@/hooks/useAuth";
 
 type Header = {
   label: string;
@@ -33,25 +32,32 @@ type Header = {
 interface NotificationProps {
   title: string;
   headers: Header[];
+  data: MessageData[] | recv_message[];
+  onAction: (id: string) => Promise<void>;
 }
 
 export const NotificationTable: React.FC<NotificationProps> = ({
   title,
   headers,
+  data,
+  onAction,
 }) => {
-  // const {unreadNotifications, markMessageAsViewed} = useAuth();
-  // const location = useLocation();
-  // const navigate = useNavigate();
-  // const currentPath = location.pathname;
-  // const handleDetails = id => {
-  //   navigate(`${currentPath}/${id}`);
-  //   markMessageAsViewed(id);
-  // };
+  const {messageId, setMessageId} = useAuthContext();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPath = location.pathname;
+
+  const handleShowDetails = (id: string) => {
+    if (messageId) {
+      setMessageId(messageId?.filter(msgId => msgId !== id));
+    }
+    navigate(`${currentPath}/${id}`);
+  };
 
   return (
     <>
       <p className="text-xl font-semibold p-2">{title}</p>
-      <div className="ml-3">
+      <div className="ml-3 max-h-4/5 overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -62,40 +68,36 @@ export const NotificationTable: React.FC<NotificationProps> = ({
               ))}
             </TableRow>
           </TableHeader>
-          {/* <TableBody>
+          <TableBody className="mt-10">
             {data?.map(({id, sender, receivers, subject, body, date}) => (
               <TableRow
                 key={id}
-                className={unreadNotifications.has(id) ? "bg-gray-200" : ""}
+                className={messageId?.includes(id) ? "font-bold" : ""}
               >
-                <TableCell
-                  className={
-                    unreadNotifications.has(id) ? "font-bold" : "font-normal"
-                  }
-                >
-                  {title == "Inbox" ? sender : receivers}
+                <TableCell>
+                  {title == "Inbox" ? sender : receivers?.join("; ")}
                 </TableCell>
-                <TableCell
-                  className={
-                    unreadNotifications.has(id) ? "font-bold" : "font-normal"
-                  }
-                >
-                  <span className="font-semibold text-md">{subject}: </span>
-                  <span className="truncate">{body}</span>
+                <TableCell>
+                  <span
+                    className={
+                      messageId?.includes(id)
+                        ? "font-bold text-md"
+                        : "font-semibold"
+                    }
+                  >
+                    {subject}:{" "}
+                  </span>
+                  <span>{body.slice(0, 100).concat("...")}</span>
                 </TableCell>
-                <TableCell
-                  className={
-                    unreadNotifications.has(id) ? "font-bold" : "font-normal"
-                  }
-                >
-                  {date}
+                <TableCell className="">
+                  {new Date(date).toLocaleString()}
                 </TableCell>
 
                 <TableCell>
                   <div className="flex">
                     <button
                       className="hover:bg-green-400 rounded-full p-1"
-                      onClick={() => handleDetails(id)}
+                      onClick={() => handleShowDetails(id)}
                     >
                       <TbScanEye className="w-5 h-5" />
                     </button>
@@ -131,7 +133,7 @@ export const NotificationTable: React.FC<NotificationProps> = ({
                 </TableCell>
               </TableRow>
             ))}
-          </TableBody> */}
+          </TableBody>
         </Table>
       </div>
     </>

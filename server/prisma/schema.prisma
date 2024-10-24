@@ -52,3 +52,13 @@ model employees {
   departments  departments @relation(fields: [dept_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "dept_id_fkey")
   job_title    job_title   @relation(fields: [job_title_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "job_title_fkey")
 }
+
+model messages {
+  id        String    @id @db.Uuid
+  sender    String?
+  receivers Json?     @db.Json
+  subject   String?
+  body      String?
+  date      DateTime? @db.Timestamptz(6)
+  status    String?
+}

@@ -17,6 +17,7 @@ import {NotificationsContainer} from "./components/NotificationsContainer";
 import {InboxPage} from "./pages/Notifications/InboxPage";
 import {SentPage} from "./pages/Notifications/SentPage";
 import {DraftPage} from "./pages/Notifications/DraftPage";
+import {DetailsPage} from "./pages/Notifications/DetailsPage";
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -47,8 +48,11 @@ function App() {
                 >
                   <Route path="" element={<Navigate to="inbox" />} />
                   <Route path="inbox" element={<InboxPage />} />
+                  <Route path="inbox/:id" element={<DetailsPage />} />
                   <Route path="sent" element={<SentPage />} />
+                  <Route path="sent/:id" element={<DetailsPage />} />
                   <Route path="draft" element={<DraftPage />} />
+                  <Route path="draft/:id" element={<DetailsPage />} />
                 </Route>
               </Routes>
               <Toaster />
