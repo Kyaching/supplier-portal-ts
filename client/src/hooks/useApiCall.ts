@@ -99,7 +99,7 @@ export const useUpdate = <T>() => {
     try {
       const result = await updateData(url, payload);
       setStatus(result.message);
-      toast.success(result.message);
+      return result;
     } catch (err: unknown) {
       console.log(err);
       if (err instanceof Error) {

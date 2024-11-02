@@ -23,6 +23,9 @@ import {
 import {MessageData} from "@/hooks/useMessages";
 import {recv_message} from "@/contexts/AuthContext/AuthContext";
 import {useAuthContext} from "@/hooks/useAuth";
+import {useUpdate} from "@/hooks/useApiCall";
+import {useEffect, useState} from "react";
+import {useNotificationContext} from "@/hooks/useNotification";
 
 type Header = {
   label: string;
@@ -42,22 +45,38 @@ export const NotificationTable: React.FC<NotificationProps> = ({
   data,
   onAction,
 }) => {
-  const {messageId, setMessageId} = useAuthContext();
+  const {messageId, socket, user} = useAuthContext();
+  const {setHide, hide} = useNotificationContext();
+  const [readMessage, setReadMessage] = useState<recv_message[]>([]);
+  const {update} = useUpdate();
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
 
-  const handleShowDetails = (id: string) => {
-    if (messageId) {
-      setMessageId(messageId?.filter(msgId => msgId !== id));
+  useEffect(() => {
+    if (data && typeof user === "string") {
+      const filterReader = data.filter(msg => msg.read?.includes(user));
+      setReadMessage(filterReader);
+    }
+  }, [data, user]);
+
+  const handleShowDetails = async (id: string) => {
+    const findReader = readMessage.find(msg => msg.id === id);
+    const readersName = findReader?.read;
+    if (readersName) {
+      const reader = readersName.filter(usr => usr !== user);
+      await update(`/messages/${id}`, {name: reader});
+      socket.emit("read_message", {id, readers: readersName});
     }
     navigate(`${currentPath}/${id}`);
+    setHide(true);
+    localStorage.setItem("hidden", JSON.stringify(hide));
   };
 
   return (
     <>
       <p className="text-xl font-semibold p-2">{title}</p>
-      <div className="ml-3 max-h-4/5 overflow-y-auto">
+      <div className="ml-3 max-h-[450px] overflow-y-auto scroll-bar">
         <Table>
           <TableHeader>
             <TableRow>

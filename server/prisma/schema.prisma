@@ -54,11 +54,14 @@ model employees {
 }
 
 model messages {
-  id        String    @id @db.Uuid
-  sender    String?
-  receivers Json?     @db.Json
-  subject   String?
-  body      String?
-  date      DateTime? @db.Timestamptz(6)
-  status    String?
+  id            String    @id @db.Uuid
+  sender        String?
+  receivers     Json?     @db.Json
+  subject       String?
+  body          String?
+  date          DateTime? @db.Timestamptz(6)
+  status        String?
+  read          String[]
+  parentId      String?
+  involvedUsers Json?     @db.Json
 }

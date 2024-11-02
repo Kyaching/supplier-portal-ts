@@ -19,6 +19,9 @@ interface NotificationProps {
   drafts: MessageData[];
   sentMessage: MessageData[];
   inboxMessage: recv_message[];
+  refetchInbox: () => Promise<void>;
+  hide: boolean;
+  setHide: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const NotificationContext = createContext<NotificationProps | undefined>(
@@ -28,22 +31,24 @@ export const NotificationContext = createContext<NotificationProps | undefined>(
 export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({
   children,
 }) => {
-  const {user, message, socket, messageId, setMessageId} = useAuthContext();
+  const {
+    user,
+    message,
+    draftMessage,
+    sendMsg,
+    socket,
+    messageId,
+    setMessageId,
+  } = useAuthContext();
   const {post} = usePost("/messages");
   const {remove} = useDelete();
-  const {
-    draftMessages,
-    inboxMessages,
-    sentMessages,
-    refetchDraft,
-    refetchAll,
-    refetchSent,
-    refetchInbox,
-  } = useMessages(user);
+  const {draftMessages, inboxMessages, sentMessages, refetchAll, refetchInbox} =
+    useMessages(user);
   const [drafts, setDrafts] = useState<MessageData[]>([]);
   const [sentMessage, setSentMessage] = useState<MessageData[]>([]);
   const [inboxMessage, setInboxMessage] = useState<recv_message[]>([]);
-  // console.log(inboxMessage);
+  const [hide, setHide] = useState<boolean>(false);
+
   useEffect(() => {
     if (inboxMessages && user !== null && !Array.isArray(user)) {
       const filteredMessage = inboxMessages.filter(message =>
@@ -58,7 +63,6 @@ export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({
       setInboxMessage(prevMessages => [message, ...prevMessages]);
     }
   }, [message]);
-
   useEffect(() => {
     if (draftMessages) {
       setDrafts(draftMessages.filter(message => message.status === "draft"));
@@ -66,10 +70,22 @@ export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({
   }, [draftMessages]);
 
   useEffect(() => {
+    if (draftMessage) {
+      setDrafts(prevMessages => [draftMessage, ...prevMessages]);
+    }
+  }, [draftMessage]);
+
+  useEffect(() => {
     if (sentMessages) {
       setSentMessage(sentMessages.filter(message => message.status === "sent"));
     }
   }, [sentMessages]);
+
+  useEffect(() => {
+    if (sendMsg) {
+      setSentMessage(prevMessages => [sendMsg, ...prevMessages]);
+    }
+  }, [sendMsg]);
 
   const handleMessages = async (data: messageData, status: string) => {
     const message = {
@@ -83,17 +99,26 @@ export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({
     if (status === "sent") {
       socket.emit("send_message", message);
     }
-
+    if (status === "draft") {
+      socket.emit("draft_message", message);
+    }
     const response = await post(message);
     if (response) {
+      if (status === "sent") {
+        toast.success("Send Message Successfully");
+        await refetchInbox();
+      }
       if (status === "draft") {
-        refetchDraft();
-      } else if (status === "sent") {
-        refetchSent();
-        refetchInbox();
+        toast.success("Save Message Successfully");
       }
     }
   };
+
+  socket.on("delete_message", (msg: {id: string}) => {
+    setInboxMessage(inboxMessage.filter(msgId => msgId.id !== msg.id));
+    setDrafts(drafts.filter(msgId => msgId.id !== msg.id));
+    setSentMessage(sentMessage.filter(msgId => msgId.id !== msg.id));
+  });
 
   const handleRemoveMessage = async (id: string) => {
     if (messageId) {
@@ -101,20 +126,8 @@ export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({
     }
     try {
       const result = await remove(`/messages/${id}`);
-
       if (result) {
-        // setInboxMails(inboxMails.filter(message => message.id !== id));
-        // setSentMessage(sentMessage.filter(message => message.id !== id));
-        // setDrafts(drafts.filter(message => message.id !== id));
-        // if (message.length > 0) {
-        //   setMessage(message.filter(msg => msg.id !== id));
-        //   console.log("from auth", message);
-        // }
-        // setUnreadNotifications(prev => {
-        //   const updated = new Set(prev);
-        //   updated.delete(id);
-        //   return updated;
-        // });
+        socket.emit("delete_message", {id});
         await refetchAll();
       }
       if (!result) {
@@ -132,10 +145,13 @@ export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({
         drafts,
         sentMessage,
         inboxMessage,
+        refetchInbox,
         handleDraftMessage: (data: messageData) =>
           handleMessages(data, "draft"),
         handleSendMessage: (data: messageData) => handleMessages(data, "sent"),
         handleRemoveMessage,
+        hide,
+        setHide,
       }}
     >
       {children}

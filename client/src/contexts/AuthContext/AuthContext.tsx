@@ -1,4 +1,5 @@
 import {useGet, usePost} from "@/hooks/useApiCall";
+import {MessageData} from "@/hooks/useMessages";
 import {
   createContext,
   SetStateAction,
@@ -14,7 +15,10 @@ interface AuthContextType {
   handleLogOut: () => void;
   user: string | string[] | null;
   message: recv_message | null;
-  messageId: string[] | null;
+  readMessageId: string | null;
+  draftMessage: MessageData | null;
+  sendMsg: MessageData | null;
+  messageId: string[];
   setMessageId: React.Dispatch<SetStateAction<string[]>>;
   notification: recv_message[];
   socket: SocketIOClient.Socket;
@@ -26,6 +30,7 @@ export type recv_message = {
   sender: string;
   receivers?: string[];
   date: string;
+  read: string[];
 };
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
@@ -38,7 +43,9 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
     localStorage.getItem("username")
   );
   const [message, setMessage] = useState<recv_message | null>(null);
-  const [notification, setNotification] = useState<recv_message[]>([]);
+  const [readMessageUser, setReadMessageUser] = useState<string[]>([]);
+  const [draftMessage, setDraftMessage] = useState<MessageData | null>(null);
+  const [sendMsg, setSendMsg] = useState<MessageData | null>(null);
   const [messageId, setMessageId] = useState<string[]>([]);
   const [isLogged, setIsLogged] = useState(false);
   const {data} = useGet<string>("/profile");
@@ -75,9 +82,22 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
       });
       socket.on("receive_message", (msg: recv_message) => {
         setMessageId(prev => [...prev, msg.id]);
+        setReadMessageUser(msg.read);
         setMessage(msg);
-        setNotification(prev => [...prev, msg]);
-        console.log("From Server", msg);
+      });
+
+      // socket.on("read_message", (msg: {id: string; readers: string[]}) => {
+      //   setReadMessageUser(msg.readers);
+      //   setMessageId(messageId.filter(mess => mess !== msg.id));
+      //   // console.log("red id", msg.id);
+      //   // console.log("readers", msg.readers);
+      // });
+
+      socket.on("draft_message", (msg: MessageData) => {
+        setDraftMessage(msg);
+      });
+      socket.on("send_message", (msg: MessageData) => {
+        setSendMsg(msg);
       });
 
       // Clean up the socket connection on logout or component unmount
@@ -86,8 +106,6 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
       };
     }
   }, [socket, isLogged]);
-
-  console.log("msgId", messageId);
 
   const handleLogin = async (username: string, password: string) => {
     const response = await loginUser({username, password});
@@ -115,9 +133,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
         user,
         message,
         socket,
-        notification,
         messageId,
         setMessageId,
+        readMessageUser,
+        setReadMessageUser,
+        draftMessage,
+        sendMsg,
       }}
     >
       {children}

@@ -2,13 +2,14 @@ import {useState, useEffect} from "react";
 import {useGet} from "./useApiCall";
 
 export interface MessageData {
-  status: string;
+  status?: string;
   id: string;
   sender: string;
   receivers: string[];
   date: string;
   subject: string;
   body: string;
+  read: string[];
 }
 
 const useMessages = (user: string | string[] | null) => {

@@ -42,18 +42,28 @@ function App() {
                   element={<MasterDetailsContainer />}
                 />
                 <Route path="/widget" element={<WidgetContainer />} />
+
                 <Route
                   path="/notification"
                   element={<NotificationsContainer />}
                 >
                   <Route path="" element={<Navigate to="inbox" />} />
                   <Route path="inbox" element={<InboxPage />} />
-                  <Route path="inbox/:id" element={<DetailsPage />} />
                   <Route path="sent" element={<SentPage />} />
-                  <Route path="sent/:id" element={<DetailsPage />} />
                   <Route path="draft" element={<DraftPage />} />
-                  <Route path="draft/:id" element={<DetailsPage />} />
                 </Route>
+                <Route
+                  path="/notification/inbox/:id"
+                  element={<DetailsPage />}
+                />
+                <Route
+                  path="/notification/sent/:id"
+                  element={<DetailsPage />}
+                />
+                <Route
+                  path="/notification/draft/:id"
+                  element={<DetailsPage />}
+                />
               </Routes>
               <Toaster />
             </div>

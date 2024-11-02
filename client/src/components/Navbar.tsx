@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {FiBell, FiHome, FiLogOut, FiMail, FiMenu, FiX} from "react-icons/fi";
 import {GoTasklist} from "react-icons/go";
 import {NavLink} from "react-router-dom";
@@ -15,6 +15,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "./ui/avatar";
 import image from "../assets/user.png";
 import {Button} from "./ui/button";
 import {useAuthContext} from "@/hooks/useAuth";
+import {useNotificationContext} from "@/hooks/useNotification";
 const navLists: navItems[] = [
   {name: "home", icon: <FiHome />},
   {name: "alerts", icon: <FiBell />},
@@ -24,12 +25,28 @@ const navLists: navItems[] = [
 
 export const Navbar: (props: NavbarProps) => JSX.Element = ({setCollapsed}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const {handleLogOut, user, messageId} = useAuthContext();
+  const {handleLogOut, user, messageId, socket, setMessageId} =
+    useAuthContext();
+  const {inboxMessage, refetchInbox} = useNotificationContext();
 
+  useEffect(() => {
+    if (typeof user === "string") {
+      const unreadMessage = inboxMessage?.filter(msg =>
+        msg.read?.includes(user)
+      );
+      setMessageId(unreadMessage.flatMap(msg => msg.id));
+    }
+  }, [inboxMessage, user, setMessageId]);
+
+  socket.on("read_message", async (msg: {id: string}) => {
+    await refetchInbox();
+    setMessageId(messageId?.filter(mess => mess !== msg.id));
+  });
   const handleCollapsed = () => {
     setCollapsed(prev => !prev);
     setIsOpen(prev => !prev);
   };
+
   return (
     <nav className="p-3 border-b border-b-[#18B192] shadow-md font-semibold text-lg">
       <div className="flex items-center justify-between">
@@ -58,9 +75,13 @@ export const Navbar: (props: NavbarProps) => JSX.Element = ({setCollapsed}) => {
                 {item.name === "notification" ? (
                   <div className="relative">
                     <span className="capitalize">{item.name}</span>
-                    {messageId && messageId.length > 0 && (
+                    {messageId?.length > 0 && (
+                      // || unreadMessages?.length > 0)
                       <span className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-sm font-semibold">
-                        {messageId?.length}
+                        {
+                          messageId?.length
+                          //  || unreadMessages?.length
+                        }
                       </span>
                     )}
                   </div>

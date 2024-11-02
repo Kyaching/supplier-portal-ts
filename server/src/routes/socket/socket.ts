@@ -26,21 +26,30 @@ const socketOperation = (httpServer: any) => {
     if (typeof user === "string") {
       socket.join(user);
       console.log(`user ${socket.id} connected room ${user}`);
-      // if (!offlineUsers[user]) {
-      //   offlineUsers[user] = [];
+
+      // if (offlineUsers[user]) {
+      //   offlineUsers[user].forEach((msg: message) => {
+      //     socket.to(user).emit("ofline_message", msg);
+
+      //     console.log(
+      //       `user ${user} with ${socket.id} will get the message ${msg}`
+      //     );
+      //     console.log(msg);
+      //   });
+      //   delete offlineUsers[user];
       // }
-
-      if (offlineUsers[user]) {
-        offlineUsers[user].forEach((msg: message) => {
-          socket.to(user).emit("ofline_message", msg);
-
-          console.log(
-            `user ${user} with ${socket.id} will get the message ${msg}`
-          );
-          console.log(msg);
-        });
-        delete offlineUsers[user];
-      }
+      socket.on("read_message", msg => {
+        io.to(user).emit("read_message", msg);
+      });
+      socket.on("draft_message", msg => {
+        io.to(user).emit("draft_message", msg);
+      });
+      socket.on("send_message", msg => {
+        io.to(user).emit("send_message", msg);
+      });
+      socket.on("delete_message", msg => {
+        io.emit("delete_message", msg);
+      });
     }
     next();
   });
@@ -63,11 +72,11 @@ const socketOperation = (httpServer: any) => {
     //   }
     // }
     socket.on("send_message", msg => {
-      const {id, sender, subject, body, date} = msg;
-      const message = {id, sender, subject, body, date};
-      const receivers = msg.receivers;
+      const {id, sender, subject, body, date, receivers} = msg;
+      const message = {id, sender, subject, body, read: receivers, date};
+      const mReceivers = msg.receivers;
 
-      receivers.forEach((user: string) => {
+      mReceivers.forEach((user: string) => {
         io.to(user).emit("receive_message", message);
 
         if (!offlineUsers[user]) {
@@ -81,7 +90,7 @@ const socketOperation = (httpServer: any) => {
     });
 
     socket.on("disconnect", () => {
-      console.log("user Disconnected");
+      console.log("user Disconnected", socket.id);
     });
   });
 };

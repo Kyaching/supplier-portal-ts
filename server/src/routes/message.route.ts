@@ -7,9 +7,12 @@ const router = Router();
 router.get("/messages/:id", async (req, res) => {
   const {id} = req.params;
   try {
-    const message = await prisma.messages.findUnique({
+    const message = await prisma.messages.findMany({
       where: {
-        id,
+        OR: [{id}, {parentId: id}],
+      },
+      orderBy: {
+        date: "desc",
       },
     });
     if (message) {
@@ -97,6 +100,7 @@ router.post("/messages", async (req, res) => {
         body,
         status,
         date,
+        read: receivers,
       },
     });
 
@@ -105,6 +109,63 @@ router.post("/messages", async (req, res) => {
     console.error(error);
     res.status(500).json({error: "An error occurred while creating the user."});
   }
+});
+
+router.post("/messages/:id", async (req, res) => {
+  const {
+    id,
+    parentId,
+    sender,
+    receivers,
+    subject,
+    body,
+    status,
+    date,
+    involvedUsers,
+  } = req.body;
+
+  try {
+    const messages = await prisma.messages.create({
+      data: {
+        id,
+        parentId,
+        subject,
+        body,
+        date,
+        sender,
+        receivers,
+        status,
+        involvedUsers,
+      },
+    });
+
+    res.status(200).send({success: true});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({error: "An error occurred while creating the user."});
+  }
+});
+
+router.put("/messages/:id", async (req, res) => {
+  const {id} = req.params;
+  const {name} = req.body;
+  try {
+    await prisma.messages.update({
+      where: {
+        id,
+      },
+      data: {
+        read: name,
+      },
+    });
+    res.status(200).send({message: "Updated Data Successfully"});
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({error: "An error occurred while Updating the users."});
+  }
+  console.log(name, id);
 });
 
 router.delete("/messages/:id", async (req, res) => {
